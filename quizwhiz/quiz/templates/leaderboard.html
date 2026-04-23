@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaderboard</title>
+</head>
+<body>
+
+<h2>Leaderboard</h2>
+<ul id="leaderboard"></ul>
+
+<script>
+fetch('/api/leaderboard/')
+.then(res => res.json())
+.then(data => {
+    const list = document.getElementById('leaderboard');
+
+    data.forEach(player => {
+        const li = document.createElement('li');
+        li.innerText = `${player.rank}. ${player.username} - ${player.score}`;
+        list.appendChild(li);
+    });
+});
+</script>
+
+</body>
+</html>

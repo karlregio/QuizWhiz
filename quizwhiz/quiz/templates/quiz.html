@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Take Quiz</title>
+</head>
+<body>
+
+<h2 id="quiz-title"></h2>
+
+<form id="quiz-form"></form>
+
+<input type="text" id="username" placeholder="Enter your name" required>
+<button onclick="submitQuiz()">Submit</button>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const quizId = params.get('id');
+
+fetch(`/api/quizzes/${quizId}/`)
+.then(res => res.json())
+.then(data => {
+    document.getElementById('quiz-title').innerText = data.title;
+
+    const form = document.getElementById('quiz-form');
+
+    data.questions.forEach(q => {
+        const div = document.createElement('div');
+        div.innerHTML = `<p>${q.text}</p>`;
+
+        q.choices.forEach(c => {
+            div.innerHTML += `
+                <label>
+                    <input type="radio" name="q${q.id}" value="${c.id}">
+                    ${c.text}
+                </label><br>
+            `;
+        });
+
+        form.appendChild(div);
+    });
+});
+
+function submitQuiz() {
+    const username = document.getElementById('username').value;
+
+    const answers = [];
+
+    document.querySelectorAll('#quiz-form div').forEach(div => {
+        const questionId = div.querySelector('input').name.replace('q','');
+        const selected = div.querySelector('input:checked');
+
+        if(selected){
+            answers.push({
+                question_id: parseInt(questionId),
+                choice_id: parseInt(selected.value)
+            });
+        }
+    });
+
+    fetch(`/api/quizzes/${quizId}/submit/`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username, answers })
+    })
+    .then(res => res.json())
+    .then(data => {
+        localStorage.setItem('result', JSON.stringify(data));
+        window.location.href = 'result.html';
+    });
+}
+</script>
+
+</body>
+</html>
