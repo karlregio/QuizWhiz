@@ -1,25 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Result</title>
-</head>
-<body>
+<h2>Result</h2>
 
-<h2>Quiz Result</h2>
+<p>Score: {{ score }}/{{ total }}</p>
+<p>Percentage: {{ percentage }}%</p>
+<p>{{ feedback }}</p>
 
-<div id="result"></div>
-
-<a href="leaderboard.html">View Leaderboard</a>
-
-<script>
-const data = JSON.parse(localStorage.getItem('result'));
-
-document.getElementById('result').innerHTML = `
-    <p>Score: ${data.result.score}/${data.result.total_questions}</p>
-    <p>Percentage: ${data.result.percentage}%</p>
-    <p>${data.result.feedback}</p>
-`;
-</script>
-
-</body>
-</html>
+<a href="/">Back</a>
