@@ -1,7 +1,33 @@
-<h2>Result</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result</title>
+</head>
+<body>
+    <h2>Result</h2>
 
-<p>Score: {{ score }}/{{ total }}</p>
-<p>Percentage: {{ percentage }}%</p>
-<p>{{ feedback }}</p>
+    <p id="score"></p>
+    <p id="percentage"></p>
+    <p id="feedback"></p>
 
-<a href="/">Back</a>
+    <a href="/leaderboard/">Leaderboard</a><br>
+    <a href="/">Back</a>
+
+    <script>
+        const result = JSON.parse(localStorage.getItem('quiz_result'));
+
+        if (!result || result.score === undefined) {
+            document.getElementById('score').innerText = "No result found.";
+        } else {
+            document.getElementById('score').innerText =
+                `Score: ${result.score}/${result.total_questions}`;
+
+            document.getElementById('percentage').innerText =
+                `Percentage: ${result.percentage}%`;
+
+            document.getElementById('feedback').innerText =
+                `Feedback: ${result.feedback}`;
+        }
+    </script>
+</body>
+</html>

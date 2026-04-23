@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Quiz(models.Model):
     title = models.CharField(max_length=200)
 
@@ -26,11 +27,12 @@ class Choice(models.Model):
 
 class Result(models.Model):
     username = models.CharField(max_length=100)
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='results')
     score = models.IntegerField()
     total_questions = models.IntegerField()
     percentage = models.FloatField()
     feedback = models.CharField(max_length=255)
     taken_at = models.DateTimeField(auto_now_add=True)
-    
-    
+
+    def __str__(self):
+        return f"{self.username} - {self.quiz.title}"

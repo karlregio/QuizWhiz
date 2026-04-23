@@ -4,23 +4,29 @@
     <title>Leaderboard</title>
 </head>
 <body>
+    <h2>Leaderboard</h2>
+    <ul id="leaderboard-list"></ul>
 
-<h2>Leaderboard</h2>
-<ul id="leaderboard"></ul>
+    <a href="/">Back</a>
 
-<script>
-fetch('/api/leaderboard/')
-.then(res => res.json())
-.then(data => {
-    const list = document.getElementById('leaderboard');
+    <script>
+        fetch('/api/leaderboard/')
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('leaderboard-list');
+                list.innerHTML = '';
 
-    data.forEach(player => {
-        const li = document.createElement('li');
-        li.innerText = `${player.rank}. ${player.username} - ${player.score}`;
-        list.appendChild(li);
-    });
-});
-</script>
-
+                data.forEach((p, i) => {
+                    list.innerHTML += `
+                        <li>
+                            ${i+1}. ${p.username} - 
+                            ${p.score}/${p.total_questions} 
+                            (${p.percentage}%) - ${p.feedback}
+                        </li>
+                    `;
+                });
+            })
+            .catch(err => console.error(err));
+    </script>
 </body>
 </html>
