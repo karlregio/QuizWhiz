@@ -1,32 +1,272 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Result</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result — QuizWhiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0c14;
+            --surface: #111520;
+            --border: #1e2540;
+            --gold: #f0b429;
+            --gold-dim: #a87d1a;
+            --text: #e8eaf0;
+            --muted: #6b7280;
+            --correct: #22c55e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(240,180,41,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(240,180,41,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .label {
+            font-size: 10px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gold-dim);
+            margin-bottom: 20px;
+        }
+
+        .score-display {
+            font-family: 'Playfair Display', serif;
+            font-size: 88px;
+            font-weight: 900;
+            line-height: 0.9;
+            color: var(--gold);
+            margin-bottom: 8px;
+            opacity: 0;
+            animation: countUp 0.6s 0.2s forwards;
+        }
+
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .score-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 40px;
+        }
+
+        .ring-wrap {
+            margin-bottom: 48px;
+        }
+
+        .progress-ring {
+            display: block;
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 6;
+        }
+
+        .ring-fill {
+            fill: none;
+            stroke: var(--gold);
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 226;
+            stroke-dashoffset: 226;
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.4s;
+            transform: rotate(-90deg);
+            transform-origin: center;
+        }
+
+        .ring-text {
+            font-family: 'DM Mono', monospace;
+            font-size: 14px;
+            fill: var(--text);
+            dominant-baseline: central;
+            text-anchor: middle;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 20px;
+            opacity: 0;
+            animation: fadeUp 0.4s forwards;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.5s; }
+        .stat-card:nth-child(2) { animation-delay: 0.6s; }
+
+        @keyframes fadeUp {
+            to { opacity: 1; }
+        }
+
+        .stat-label {
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stat-value.good { color: var(--correct); }
+
+        .feedback-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--gold);
+            padding: 20px 24px;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeUp 0.4s 0.7s forwards;
+        }
+
+        .feedback-box .stat-label { margin-bottom: 6px; }
+
+        .feedback-text {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-link {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--gold);
+            border-color: var(--gold-dim);
+        }
+
+        .nav-link.primary {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: #0a0c14;
+        }
+
+        .nav-link.primary:hover {
+            background: #e0a820;
+            border-color: #e0a820;
+            color: #0a0c14;
+        }
+    </style>
 </head>
 <body>
-    <h2>Result</h2>
+    <div class="container">
+        <div class="label">Quiz Complete</div>
 
-    <p id="score"></p>
-    <p id="percentage"></p>
-    <p id="feedback"></p>
+        <div class="score-display" id="score-num">—</div>
+        <div class="score-sub" id="score-sub">out of — questions</div>
 
-    <a href="/leaderboard/">Leaderboard</a><br>
-    <a href="/">Back</a>
+        <div class="ring-wrap">
+            <svg class="progress-ring" width="80" height="80" viewBox="0 0 80 80">
+                <circle class="ring-bg" cx="40" cy="40" r="36"/>
+                <circle class="ring-fill" id="ring-fill" cx="40" cy="40" r="36"/>
+                <text class="ring-text" x="40" y="40" id="ring-text">0%</text>
+            </svg>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="stat-score">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Percentage</div>
+                <div class="stat-value good" id="stat-pct">—</div>
+            </div>
+        </div>
+
+        <div class="feedback-box">
+            <div class="stat-label">Feedback</div>
+            <div class="feedback-text" id="feedback-text">—</div>
+        </div>
+
+        <div class="nav-links">
+            <a class="nav-link primary" href="/leaderboard/">Leaderboard</a>
+            <a class="nav-link" href="/">Back</a>
+        </div>
+    </div>
 
     <script>
         const result = JSON.parse(localStorage.getItem('quiz_result'));
 
         if (!result || result.score === undefined) {
-            document.getElementById('score').innerText = "No result found.";
+            document.getElementById('score-num').textContent = '?';
+            document.getElementById('score-sub').textContent = 'No result found.';
         } else {
-            document.getElementById('score').innerText =
-                `Score: ${result.score}/${result.total_questions}`;
+            const pct = parseFloat(result.percentage);
+            const circumference = 226;
 
-            document.getElementById('percentage').innerText =
-                `Percentage: ${result.percentage}%`;
+            document.getElementById('score-num').textContent = result.score;
+            document.getElementById('score-sub').textContent = `out of ${result.total_questions} questions`;
+            document.getElementById('stat-score').textContent = `${result.score}/${result.total_questions}`;
+            document.getElementById('stat-pct').textContent = `${pct}%`;
+            document.getElementById('feedback-text').textContent = result.feedback;
+            document.getElementById('ring-text').textContent = `${pct}%`;
 
-            document.getElementById('feedback').innerText =
-                `Feedback: ${result.feedback}`;
+            requestAnimationFrame(() => {
+                const offset = circumference - (pct / 100) * circumference;
+                document.getElementById('ring-fill').style.strokeDashoffset = offset;
+            });
         }
     </script>
 </body>

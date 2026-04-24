@@ -1,37 +1,288 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Take Quiz</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Quiz — QuizWhiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0c14;
+            --surface: #111520;
+            --border: #1e2540;
+            --gold: #f0b429;
+            --gold-dim: #a87d1a;
+            --text: #e8eaf0;
+            --muted: #6b7280;
+            --correct: #22c55e;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(240,180,41,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(240,180,41,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: var(--gold); }
+
+        #quiz-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--gold);
+            margin-bottom: 48px;
+            line-height: 1.15;
+        }
+
+        .progress-bar {
+            height: 2px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-bottom: 48px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gold);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .question-block {
+            margin-bottom: 36px;
+            opacity: 0;
+            transform: translateY(12px);
+            animation: fadeUp 0.35s forwards;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-meta {
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--gold-dim);
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 16px;
+            color: var(--text);
+            margin-bottom: 16px;
+            line-height: 1.6;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .choice-label {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            position: relative;
+        }
+
+        .choice-label:hover {
+            border-color: var(--gold-dim);
+            background: #151929;
+        }
+
+        .choice-label input[type=radio] {
+            display: none;
+        }
+
+        .choice-label input[type=radio]:checked ~ .choice-dot {
+            background: var(--gold);
+            border-color: var(--gold);
+        }
+
+        .choice-label:has(input:checked) {
+            border-color: var(--gold);
+            background: rgba(240,180,41,0.06);
+        }
+
+        .choice-dot {
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .choice-dot::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: var(--bg);
+            border-radius: 50%;
+        }
+
+        .choice-label input[type=radio]:checked ~ .choice-dot::after {
+            background: var(--bg);
+        }
+
+        .choice-text {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.4;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 48px 0;
+        }
+
+        .submit-area {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .name-field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .text-input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: 14px;
+            padding: 13px 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .text-input::placeholder { color: var(--muted); }
+        .text-input:focus { border-color: var(--gold); }
+
+        .submit-btn {
+            background: var(--gold);
+            color: #0a0c14;
+            border: none;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 14px 28px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+
+        .submit-btn:hover { background: #e0a820; }
+        .submit-btn:active { transform: scale(0.98); }
+        .submit-btn:disabled {
+            background: var(--muted);
+            cursor: not-allowed;
+        }
+
+        .status-msg {
+            font-size: 12px;
+            color: var(--danger);
+            margin-top: 12px;
+            min-height: 16px;
+        }
+    </style>
 </head>
 <body>
-    <h2 id="quiz-title">Loading...</h2>
+    <div class="container">
+        <a class="back-link" href="/">← Back</a>
 
-    <form id="quiz-form"></form>
+        <div id="quiz-title">Loading quiz<span style="animation:blink 1s step-end infinite;display:inline-block">_</span></div>
+        <style>@keyframes blink { 50% { opacity: 0; } }</style>
 
-    <br>
-    <input type="text" id="username" placeholder="Enter your name">
-    <button type="button" onclick="submitQuiz()">Submit Quiz</button>
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+        <div id="quiz-form"></div>
+
+        <div class="divider"></div>
+
+        <div class="submit-area">
+            <div class="name-field">
+                <label class="field-label" for="username">Your Name</label>
+                <input class="text-input" type="text" id="username" placeholder="Enter your name" autocomplete="off">
+            </div>
+            <button class="submit-btn" type="button" onclick="submitQuiz()">Submit →</button>
+        </div>
+        <div class="status-msg" id="status-msg"></div>
+    </div>
 
     <script>
-        // ✅ GET CSRF TOKEN FROM COOKIE
         function getCSRFToken() {
-            let cookieValue = null;
-            const cookies = document.cookie.split(';');
-
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-
-                if (cookie.startsWith('csrftoken=')) {
-                    cookieValue = cookie.substring('csrftoken='.length);
-                    break;
-                }
-            }
-
-            return cookieValue;
+            const match = document.cookie.match(/csrftoken=([^;]+)/);
+            return match ? match[1] : null;
         }
 
         const params = new URLSearchParams(window.location.search);
         const quizId = params.get('id');
+        let totalQuestions = 0;
 
         if (!quizId) {
             document.getElementById('quiz-title').innerText = 'Quiz not found.';
@@ -39,26 +290,32 @@
             fetch(`/api/quizzes/${quizId}/`)
                 .then(res => res.json())
                 .then(data => {
-                    console.log("QUIZ DATA:", data);
-
                     document.getElementById('quiz-title').innerText = data.title;
 
                     const form = document.getElementById('quiz-form');
                     form.innerHTML = '';
+                    totalQuestions = data.questions.length;
 
-                    data.questions.forEach(q => {
-                        let html = `<p>${q.text}</p>`;
+                    data.questions.forEach((q, idx) => {
+                        const block = document.createElement('div');
+                        block.className = 'question-block';
+                        block.style.animationDelay = `${idx * 0.06}s`;
 
-                        q.choices.forEach(c => {
-                            html += `
-                                <label>
-                                    <input type="radio" name="q${q.id}" value="${c.id}">
-                                    ${c.text}
-                                </label><br>
-                            `;
-                        });
+                        let choicesHtml = q.choices.map(c => `
+                            <label class="choice-label">
+                                <input type="radio" name="q${q.id}" value="${c.id}" onchange="updateProgress()">
+                                <span class="choice-dot"></span>
+                                <span class="choice-text">${c.text}</span>
+                            </label>
+                        `).join('');
 
-                        form.innerHTML += html;
+                        block.innerHTML = `
+                            <div class="question-meta">Question ${idx + 1} of ${totalQuestions}</div>
+                            <div class="question-text">${q.text}</div>
+                            <div class="choices">${choicesHtml}</div>
+                        `;
+
+                        form.appendChild(block);
                     });
                 })
                 .catch(err => {
@@ -67,50 +324,59 @@
                 });
         }
 
+        function updateProgress() {
+            const answered = document.querySelectorAll('input[type=radio]:checked').length;
+            document.getElementById('progress').style.width =
+                `${(answered / totalQuestions) * 100}%`;
+        }
+
         function submitQuiz() {
             const username = document.getElementById('username').value.trim();
+            const statusMsg = document.getElementById('status-msg');
+            statusMsg.textContent = '';
 
             if (!username) {
-                alert('Enter your name');
+                statusMsg.textContent = 'Please enter your name to continue.';
+                document.getElementById('username').focus();
                 return;
             }
 
             const answers = [];
-
-            document.querySelectorAll('input[type=radio]:checked')
-                .forEach(input => {
-                    answers.push({
-                        question_id: parseInt(input.name.replace('q', '')),
-                        choice_id: parseInt(input.value)
-                    });
+            document.querySelectorAll('input[type=radio]:checked').forEach(input => {
+                answers.push({
+                    question_id: parseInt(input.name.replace('q', '')),
+                    choice_id: parseInt(input.value)
                 });
+            });
+
+            const btn = document.querySelector('.submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
 
             fetch(`/api/quizzes/${quizId}/submit/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCSRFToken()   // ✅ FIXED
+                    'X-CSRFToken': getCSRFToken()
                 },
-                body: JSON.stringify({
-                    username: username,
-                    answers: answers
-                })
+                body: JSON.stringify({ username, answers })
             })
             .then(res => res.json())
             .then(data => {
-                console.log("SUBMIT RESPONSE:", data);
-
                 if (data.error) {
-                    alert(data.error);
+                    statusMsg.textContent = data.error;
+                    btn.disabled = false;
+                    btn.textContent = 'Submit →';
                     return;
                 }
-
                 localStorage.setItem('quiz_result', JSON.stringify(data));
-                window.location.href = "/result/";
+                window.location.href = '/result/';
             })
             .catch(err => {
                 console.error(err);
-                alert("Submit failed");
+                statusMsg.textContent = 'Submission failed. Please try again.';
+                btn.disabled = false;
+                btn.textContent = 'Submit →';
             });
         }
     </script>
