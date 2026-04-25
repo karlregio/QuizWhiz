@@ -21,6 +21,10 @@ urlpatterns = [
     # ---------- USER API ----------
     path('api/my-results/', user_history),
     path('api/results/<int:pk>/', result_detail),
+    
+    # ---------- PROFILE API ----------
+    path('profile/', profile_view),
+    path('api/profile/', profile_api),
 
     # Categories & Topics
     path('api/categories/', category_list),

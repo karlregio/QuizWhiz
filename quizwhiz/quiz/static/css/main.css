@@ -21,6 +21,11 @@ body {
     font-family: 'DM Mono', monospace;
     min-height: 100vh;
     overflow-x: hidden;
+    opacity: 1;
+    transition: opacity 0.25s ease;
+}
+body.fade-out{
+    opacity: 0;     
 }
 
 body::before {
@@ -104,14 +109,6 @@ body::before {
     flex: 1;
     height: 1px;
     background: var(--border);
-}
-
-#item-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-height: 48px;
 }
 
 .quiz-item {
@@ -909,4 +906,298 @@ body::before {
     .hist-table-header span:nth-child(5),
     .history-row .col-time,
     .history-row .col-date { display: none; }
+}
+
+
+/* Leaderboard Filter */
+.lb-filter {
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: 15px;
+
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+
+  font-family: "DM Mono", monospace;
+  font-size: 14px;
+
+  outline: none;
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.lb-filter:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lb-filter:focus {
+  border-color: #fff;
+}
+
+.lb-filter {
+  background: #0f172a;
+  color: #fff;
+}
+
+.lb-filter option {
+  background: #0f172a;
+  color: #fff;
+}
+
+.lb-filter {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='20' viewBox='0 0 24 24' width='20'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.lb-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 4px;
+}
+
+/* PROFILE STATS GRID */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 30px 0;
+}
+
+.stat-card {
+  border: 1px solid #1f2a44;
+  padding: 20px;
+  background: rgba(10,15,30,0.6);
+}
+
+.stat-label {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.stat-value {
+  font-size: 24px;
+  margin-top: 8px;
+  color: #f5b942;
+}
+
+/* PROGRESS BAR */
+.progress-section {
+  margin: 30px 0;
+}
+
+.progress-label {
+  margin-bottom: 10px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #1f2a44;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #22c55e;
+  width: 0%;
+  transition: 0.6s ease;
+}
+
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* IMPORTANT: prevent label from taking full width */
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* If you have a line after text, fix it */
+.section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #2a2f45;
+  margin-left: 15px;
+}
+
+/* Leaderboard button */
+.leaderboard-btn {
+  font-size: 12px;
+  padding: 6px 12px;
+  border: 1px solid #f5b942;
+  color: #f5b942;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.leaderboard-btn:hover {
+  background: #f5b942;
+  color: #000;
+}
+
+/* =========================
+   CATEGORY CARD (FLIP BASE)
+   ========================= */
+
+#item-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.category-card:hover .card-front,
+.category-card:hover .card-back {
+  background: rgba(24, 31, 52, 0.95);
+}
+
+.category-card:hover {
+  transform: translateY(-6px);
+}
+
+.category-card {
+  perspective: 1000px;
+  height: 200px;
+  cursor: pointer;
+}
+
+/* inner flip container */
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+/* flip trigger */
+.category-card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+/* BOTH SIDES */
+.card-front,
+.card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding: 22px;
+  border: 1px solid #24304d;
+  background: rgba(17, 24, 39, 0.85);
+  backface-visibility: hidden;
+}
+
+/* FRONT SIDE */
+.card-front {
+  z-index: 2;
+}
+
+/* BACK SIDE */
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/* =========================
+   CONTENT
+   ========================= */
+.card-title {
+  font-size: 20px;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: #8b94aa;
+}
+
+.card-full {
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+/* BUTTON */
+.start-btn {
+  margin-top: 15px;
+  padding: 8px 12px;
+  border: 1px solid #f5b942;
+  background: transparent;
+  color: #f5b942;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.start-btn:hover {
+  background: #f5b942;
+  color: #111;
+}
+/* =========================
+   CARD CONTENT
+   ========================= */
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-number {
+  font-size: 12px;
+  color: #8b94aa;
+}
+
+.card-arrow {
+  color: #f5b942;
+  opacity: 0.5;
+  transition: 0.25s ease;
+}
+
+.category-card:hover .card-arrow {
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+.card-title {
+  font-size: 20px;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+
+.card-desc {
+  font-size: 12px;
+  color: #8b94aa;
+  line-height: 1.5;
+
+  max-height: 60px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+
+
+.quiz-item {
+  grid-column: 1 / -1;
 }

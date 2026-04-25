@@ -74,7 +74,7 @@ def result_detail(request, pk):
     for question in quiz.questions.all():
         correct = question.choices.filter(is_correct=True).first()
 
-        # ✅ FIXED USER ANSWER LOGIC
+        # FIXED USER ANSWER LOGIC
         user_answer = "No answer"
         is_correct = False
 
@@ -216,8 +216,15 @@ def submit_quiz(request, pk):
 # PUBLIC - leaderboard
 @api_view(['GET'])
 def leaderboard_api(request):
-    results = Result.objects.select_related('quiz')\
-        .order_by('-score', '-percentage', '-taken_at')[:10]
+    category_id = request.GET.get('category')
+
+    results = Result.objects.select_related('quiz')
+
+    # 🎯 FILTER BY CATEGORY
+    if category_id:
+        results = results.filter(quiz__category_id=category_id)
+
+    results = results.order_by('-score', '-percentage', '-taken_at')[:10]
 
     serializer = ResultSerializer(results, many=True)
     return Response(serializer.data)
@@ -227,8 +234,17 @@ def leaderboard_api(request):
 @api_view(['GET'])
 def category_list(request):
     categories = Category.objects.all()
-    serializer = CategorySerializer(categories, many=True)
-    return Response(serializer.data)
+
+    data = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "description": c.description
+        }
+        for c in categories
+    ]
+
+    return Response(data)
 
 
 # PUBLIC - category detail
@@ -251,11 +267,27 @@ def category_quizzes(request, pk):
 @api_view(['GET'])
 def user_history(request):
     if not request.user.is_authenticated:
-        return Response({'error': 'Login required'}, status=401)
+        return Response([], status=401)
 
-    results = Result.objects.filter(
-        username=request.user.username
-    ).order_by('-taken_at')
+    results = Result.objects.filter(username=request.user.username)
+
+    # SEARCH
+    search = request.GET.get('search')
+    if search:
+        results = results.filter(quiz__title__icontains=search)
+
+    # FILTER BY MIN PERCENTAGE
+    min_pct = request.GET.get('min_pct')
+    if min_pct:
+        results = results.filter(percentage__gte=min_pct)
+
+    # FILTER BY MAX PERCENTAGE
+    max_pct = request.GET.get('max_pct')
+    if max_pct:
+        results = results.filter(percentage__lte=max_pct)
+
+    # SORT (latest first)
+    results = results.order_by('-taken_at')
 
     serializer = ResultSerializer(results, many=True)
     return Response(serializer.data)
@@ -298,3 +330,44 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('/')
+
+
+def profile_view(request):
+    return render(request, 'profile.html')
+
+
+@api_view(['GET'])
+def profile_api(request):
+    username = request.user.username
+
+    results = Result.objects.filter(username=username)
+
+    total = results.count()
+
+    best = max([r.percentage for r in results], default=0)
+
+    avg = (
+        sum([r.percentage for r in results]) / total
+        if total else 0
+    )
+
+    total_time = sum([r.time_taken or 0 for r in results])
+
+    recent = results.order_by('-id')[:5]
+
+    return Response({
+        "username": username,
+        "total_quizzes": total,
+        "best_score": best,
+        "avg_score": avg,
+        "total_time": total_time,
+        "recent": [
+            {
+                "quiz": r.quiz.title,
+                "score": r.score,
+                "total": r.total_questions,
+                "pct": r.percentage,
+                "time": r.time_taken,
+            } for r in recent
+        ]
+    })

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile — QuizWhiz</title>
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- BACK -->
+      <a class="back-link" href="/">← Back</a>
+
+      <!-- HEADER -->
+      <div class="page-header">
+        <div class="page-title" id="username">Loading...</div>
+        <div class="page-sub">Your performance overview</div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Quizzes Taken</div>
+          <div class="stat-value" id="total">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Best Score</div>
+          <div class="stat-value" id="best">0%</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Average</div>
+          <div class="stat-value" id="avg">0%</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Total Time</div>
+          <div class="stat-value" id="time">0s</div>
+        </div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="progress-section">
+        <div class="progress-label">
+          Performance — <span id="progress-text">0%</span>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- RECENT -->
+      <div class="section-label">Recent Activity</div>
+      <ul id="recent-list" class="history-list"></ul>
+    </div>
+
+    <script>
+      fetch("/api/profile/")
+        .then((res) => res.json())
+        .then((data) => {
+          // ===== SAFE VALUES =====
+          const avg = data.avg_score || 0;
+          const best = data.best_score || 0;
+
+          // ===== PERFORMANCE LABEL =====
+          let level = "Beginner";
+          if (avg >= 80) level = "Expert";
+          else if (avg >= 60) level = "Intermediate";
+
+          document.getElementById("username").innerHTML =
+            `Hi, ${data.username} <span class="badge">${level}</span>`;
+
+          document.getElementById("total").textContent =
+            data.total_quizzes || 0;
+          document.getElementById("best").textContent = best.toFixed(0) + "%";
+          document.getElementById("avg").textContent = avg.toFixed(0) + "%";
+          document.getElementById("time").textContent =
+            (data.total_time || 0) + "s";
+
+          // ===== PROGRESS =====
+          document.getElementById("progress-fill").style.width = avg + "%";
+          document.getElementById("progress-text").textContent =
+            avg.toFixed(0) + "%";
+
+          // ===== RECENT ACTIVITY =====
+          const list = document.getElementById("recent-list");
+          list.innerHTML = "";
+
+          if (!data.recent || !data.recent.length) {
+            list.innerHTML =
+              '<div class="loading-state">No recent activity.</div>';
+            return;
+          }
+
+          data.recent.forEach((r, i) => {
+            const li = document.createElement("li");
+
+            li.className = "history-row";
+            li.style.animationDelay = `${i * 0.05}s`;
+
+            li.innerHTML = `
+  <div class="col-quiz">
+    <div class="quiz-title">${r.quiz}</div>
+    <div class="quiz-sub">
+      Score: ${r.score}/${r.total} • ${r.pct.toFixed(0)}%
+    </div>
+  </div>
+
+  <div class="col-time">
+    ${r.time ?? "—"}s
+  </div>
+`;
+
+            list.appendChild(li);
+          });
+        })
+        .catch(() => {
+          document.getElementById("username").textContent =
+            "Failed to load profile";
+        });
+    </script>
+
+    <style>
+      /* SMALL ADDITIONS */
+      .badge {
+        font-size: 12px;
+        margin-left: 10px;
+        padding: 4px 8px;
+        border: 1px solid #f5b942;
+        color: #f5b942;
+      }
+
+      .quiz-sub {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-top: 3px;
+      }
+    </style>
+  </body>
+</html>
