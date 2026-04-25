@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Quiz, Question, Choice, Result, Category, SubCategory
+from .models import Quiz, Question, Choice, Result, Category
 
 
 class ChoiceInline(admin.TabularInline):
@@ -15,8 +15,8 @@ class QuestionAdmin(admin.ModelAdmin):
 
 
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'subcategory')  # ✅ FIXED
-    list_filter = ('category', 'subcategory')            # ✅ FIXED
+    list_display = ('title', 'category')
+    list_filter = ('category',)
     search_fields = ('title',)
 
 
@@ -42,12 +42,6 @@ class ResultAdmin(admin.ModelAdmin):
     )
 
 
-class SubCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'category')
-    list_filter = ('category',)
-    search_fields = ('name',)
-
-
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
@@ -58,4 +52,3 @@ admin.site.register(Question, QuestionAdmin)
 admin.site.register(Choice)
 admin.site.register(Result, ResultAdmin)
 admin.site.register(Category, CategoryAdmin)
-admin.site.register(SubCategory, SubCategoryAdmin)

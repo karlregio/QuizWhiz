@@ -8,18 +8,9 @@ class Category(models.Model):
         return self.name
 
 
-class SubCategory(models.Model):
-    name = models.CharField(max_length=100)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
-
-    def __str__(self):
-        return f"{self.category.name} - {self.name}"
-
-
 class Quiz(models.Model):
     title = models.CharField(max_length=200)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name='quizzes')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='quizzes')
 
     def __str__(self):
         return self.title
@@ -51,6 +42,7 @@ class Result(models.Model):
     feedback = models.CharField(max_length=255)
     taken_at = models.DateTimeField(auto_now_add=True)
     time_taken = models.IntegerField(default=0)
+    answers = models.JSONField(default=list)
 
     def __str__(self):
         return f"{self.username} - {self.quiz.title}"

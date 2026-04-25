@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Quiz, Question, Choice, Result, Category, SubCategory
+from .models import Quiz, Question, Choice, Result, Category
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
@@ -54,10 +54,3 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
-        
-class SubCategorySerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
-
-    class Meta:
-        model = SubCategory
-        fields = ['id', 'name', 'category_name']
