@@ -21,6 +21,7 @@
         <div class="table-header">
             <span style="text-align:center">#</span>
             <span>Player</span>
+
             <span style="text-align:right">Score</span>
             <span style="text-align:right">Pct</span>
         </div>
@@ -59,8 +60,10 @@
                         <div class="lb-rank">${medal}</div>
                         <div class="lb-name">${nameHtml}</div>
                         <div class="lb-score">${p.score}/${p.total_questions}</div>
-                        <div class="lb-pct">${p.percentage}%</div>
+                        <div class="lb-pct">${Number(p.percentage).toFixed(0)}%<div>
+                        <div class="lb-time">${p.time_taken}s</div>
                         <div class="lb-feedback">${p.feedback}</div>
+
                     `;
                     list.appendChild(li);
                 });

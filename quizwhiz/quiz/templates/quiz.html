@@ -132,31 +132,34 @@ document.getElementById('next-btn').onclick = () => {
 /* ── Final submit screen ── */
 function showSubmitScreen() {
     clearInterval(countdown);
+    document.getElementById('progress').style.width = '100%';
+
     document.getElementById('next-btn').style.display = 'none';
     document.getElementById('timer').style.display = 'none';
 
     document.getElementById('quiz-container').innerHTML = `
         <div class="divider"></div>
-        <label class="field-label" for="username">Your Name</label>
-        <input id="username" class="text-input" placeholder="Enter your name" autocomplete="off">
+
+        <div class="field-label">Ready to submit?</div>
+        <div class="hint-text">Your score will be recorded under your account.</div>
+
         <button class="submit-btn" onclick="submitQuiz()">Submit →</button>
     `;
 }
-
 /* ── Submit ── */
 function submitQuiz() {
     clearInterval(countdown);
-    const username = document.getElementById('username')?.value?.trim();
+
     const statusMsg = document.getElementById('status-msg');
     statusMsg.textContent = '';
 
-    if (!username) {
-        statusMsg.textContent = 'Please enter your name.';
-        return;
+    const btn = document.querySelector('.submit-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
     }
 
-    const btn = document.querySelector('#quiz-container .submit-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+    const timeTaken = 60 - timeLeft;
 
     fetch(`/api/quizzes/${quizId}/submit/`, {
         method: 'POST',
@@ -164,25 +167,32 @@ function submitQuiz() {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCSRFToken()
         },
-        body: JSON.stringify({ username, answers })
+        credentials: "include",
+        body: JSON.stringify({
+            answers,
+            time_taken: timeTaken
+        })
     })
     .then(res => res.json())
     .then(data => {
-        if (data.error) { statusMsg.textContent = data.error; return; }
+        if (data.error) {
+            statusMsg.textContent = data.error;
+            return;
+        }
+
         localStorage.setItem('quiz_result', JSON.stringify(data));
         window.location.href = '/result/';
     })
     .catch(err => {
         console.error(err);
-        statusMsg.textContent = 'Submission failed. Please try again.';
-        if (btn) { btn.disabled = false; btn.textContent = 'Submit →'; }
+        statusMsg.textContent = 'Submission failed.';
     });
 }
 
 /* ── Progress bar ── */
 function updateProgress() {
-    document.getElementById('progress').style.width =
-        `${(currentIndex / totalQuestions) * 100}%`;
+    const progress = (currentIndex / totalQuestions) * 100;
+    document.getElementById('progress').style.width = `${progress}%`;
 }
 </script>
 </body>

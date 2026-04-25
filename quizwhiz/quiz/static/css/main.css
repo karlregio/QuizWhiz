@@ -28,7 +28,10 @@ body {
     font-family: 'DM Mono', monospace;
     min-height: 100vh;
     overflow-x: hidden;
+    opacity: 1;
+    transition: opacity 0.3s ease;
 }
+
 
 /* ── Grid background ── */
 body::before {
@@ -98,7 +101,17 @@ body::before {
     background: var(--border);
 }
 
+.auth-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
 /* ── Quiz / Category list ── */
+
+.quiz-item {
+  cursor: pointer;
+}
 #item-list {
     list-style: none;
     display: flex;
@@ -424,13 +437,10 @@ body::before {
 .stat-value.good { color: var(--correct); }
 
 .feedback-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--gold);
-    padding: 20px 24px;
-    margin-bottom: 40px;
-    opacity: 0;
-    animation: fadeUp 0.4s 0.8s forwards;
+  margin-top: 25px;
+  padding: 16px;
+  border-left: 4px solid #f5b942;
+  background: rgba(255,255,255,0.02);
 }
 
 .feedback-text { font-size: 14px; color: var(--text); line-height: 1.6; }
@@ -475,8 +485,8 @@ body::before {
 
 .table-header {
     display: grid;
-    grid-template-columns: 52px 1fr auto auto;
-    gap: 16px;
+    grid-template-columns: 3fr 1fr 1fr 1fr 1.5fr;
+    gap: 20px;
     padding: 10px 20px;
     font-size: 10px;
     letter-spacing: 3px;
@@ -495,9 +505,9 @@ body::before {
 
 .lb-row {
     display: grid;
-    grid-template-columns: 52px 1fr auto auto;
+    grid-template-columns: 3fr 1fr 1fr 1fr 1.5fr;
     grid-template-rows: auto auto;
-    gap: 0 16px;
+    gap: 0 20px;
     align-items: center;
     padding: 16px 20px;
     background: var(--surface);
@@ -536,11 +546,10 @@ body::before {
 .lb-row.rank-3 .lb-rank { color: var(--rank3); }
 
 .lb-name {
-    font-size: 14px;
-    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;     /* max 2 lines */
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 /* ── Leading scorer name highlight ── */
@@ -604,3 +613,145 @@ body::before {
 @keyframes fadeUp  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
 @keyframes blink   { 50% { opacity: 0; } }
+
+
+
+.lb-row:hover {
+    transform: translateY(-2px);
+    transition: 0.2s ease;
+}
+
+.lb-feedback {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+.history-row {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1fr 1.5fr;
+    gap: 20px;
+    align-items: center;
+
+    padding: 18px 22px;
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 10px;
+
+    background: rgba(255,255,255,0.02);
+    transition: 0.2s ease;
+}
+
+.history-row:hover {
+    background: rgba(255, 193, 7, 0.08);
+    border-color: rgba(255, 193, 7, 0.4);
+}
+
+.col-quiz {
+    display: flex;
+    flex-direction: column;
+}
+
+.quiz-title {
+    font-weight: 600;
+    color: #f5c542;
+    font-size: 15px;
+}
+
+.quiz-feedback {
+    font-size: 12px;
+    opacity: 0.6;
+    margin-top: 3px;
+}
+
+.col-score,
+.col-pct,
+.col-time,
+.col-date {
+    text-align: right;
+    font-size: 14px;
+}
+
+.col-pct {
+    color: #f5c542;
+    font-weight: 600;
+}
+
+.review-section {
+    margin-top: 30px;
+}
+
+.section-title {
+    font-size: 14px;
+    opacity: 0.6;
+    margin-bottom: 10px;
+}
+
+/* container */
+.review-item {
+  border: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.02);
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+/* color states */
+.review-item.correct {
+  border-left-color: #4caf50;
+}
+
+.review-item.wrong {
+  border-left-color: #ff4d4d;
+}
+
+/* header (always visible) */
+.review-header {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* body (hidden by default) */
+.review-body {
+  display: none;
+  padding: 0 16px 12px;
+}
+
+/* expanded state */
+.review-item.expanded .review-body {
+  display: block;
+}
+
+/* answers */
+.review-answer.correct {
+  color: #4caf50;
+}
+
+.review-answer.wrong {
+  color: #ff4d4d;
+}
+
+/* toggle icon */
+.toggle-icon {
+  opacity: 0.6;
+}
+
+.review-question {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.review-answer {
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.correct {
+    color: #4caf50;
+}
+
+.wrong {
+    color: #f44336;
+}
