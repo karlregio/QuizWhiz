@@ -1,239 +1,189 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Take Quiz — QuizWhiz</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Quiz — QuizWhiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
-
 <body>
-  <div class="container">
+<div class="container">
 
     <a class="back-link" href="/">← Back</a>
 
     <h2 id="quiz-title">Loading...</h2>
 
-    <!-- TIMER -->
     <p id="timer">Time left: 60s</p>
 
-    <!-- PROGRESS -->
     <div class="progress-bar">
-      <div class="progress-fill" id="progress"></div>
+        <div class="progress-fill" id="progress"></div>
     </div>
 
-    <!-- QUIZ CONTENT -->
     <div id="quiz-container"></div>
 
-    <!-- NEXT BUTTON -->
-    <button id="next-btn" class="submit-btn" style="display:none;">
-      Next →
-    </button>
+    <button id="next-btn" class="submit-btn" style="display:none; margin-top:24px;">Next →</button>
 
     <div class="status-msg" id="status-msg"></div>
 
-  </div>
+</div>
 
 <script>
-const startTime = Date.now(); // START TIMER
 function getCSRFToken() {
-  const match = document.cookie.match(/csrftoken=([^;]+)/);
-  return match ? match[1] : null;
+    const match = document.cookie.match(/csrftoken=([^;]+)/);
+    return match ? match[1] : null;
 }
 
 const params = new URLSearchParams(window.location.search);
-const quizId = params.get("id");
+const quizId = params.get('id');
 
 let questions = [];
 let currentIndex = 0;
 let answers = [];
 let totalQuestions = 0;
-
-/* ================= TIMER ================= */
 let timeLeft = 60;
 let countdown;
 
+/* ── Timer ── */
 function startTimer() {
-  const timerEl = document.getElementById("timer");
+    const timerEl = document.getElementById('timer');
+    countdown = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Time left: ${timeLeft}s`;
 
-  countdown = setInterval(() => {
-    timeLeft--;
-    timerEl.textContent = `Time left: ${timeLeft}s`;
+        if (timeLeft <= 10) timerEl.classList.add('warning');
 
-    if (timeLeft <= 0) {
-      clearInterval(countdown);
-      alert("Time is up!");
-      submitQuiz();
-    }
-  }, 1000);
+        if (timeLeft <= 0) {
+            clearInterval(countdown);
+            showSubmitScreen();
+        }
+    }, 1000);
 }
-/* ========================================= */
 
+/* ── Load quiz ── */
 if (!quizId) {
-  document.getElementById("quiz-title").innerText = "Quiz not found.";
+    document.getElementById('quiz-title').innerText = 'Quiz not found.';
 } else {
-  fetch(`/api/quizzes/${quizId}/`)
+    fetch(`/api/quizzes/${quizId}/`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('quiz-title').innerText = data.title;
+            questions = data.questions;
+            totalQuestions = questions.length;
+            renderQuestion();
+            startTimer();
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('quiz-title').innerText = 'Error loading quiz.';
+        });
+}
+
+/* ── Render question ── */
+function renderQuestion() {
+    const container = document.getElementById('quiz-container');
+    const nextBtn = document.getElementById('next-btn');
+    const q = questions[currentIndex];
+
+    const choicesHtml = q.choices.map(c => `
+        <label class="choice-label">
+            <input type="radio" name="choice" value="${c.id}">
+            <span class="choice-dot"></span>
+            <span class="choice-text">${c.text}</span>
+        </label>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="question-meta">Question ${currentIndex + 1} of ${totalQuestions}</div>
+        <div class="question-text">${q.text}</div>
+        <div class="choices">${choicesHtml}</div>
+    `;
+
+    nextBtn.style.display = 'block';
+    nextBtn.textContent = currentIndex === totalQuestions - 1 ? 'Finish →' : 'Next →';
+
+    updateProgress();
+}
+
+/* ── Next button ── */
+document.getElementById('next-btn').onclick = () => {
+    const selected = document.querySelector("input[name='choice']:checked");
+    if (!selected) {
+        document.getElementById('status-msg').textContent = 'Please select an answer.';
+        return;
+    }
+    document.getElementById('status-msg').textContent = '';
+
+    answers.push({
+        question_id: questions[currentIndex].id,
+        choice_id: parseInt(selected.value)
+    });
+
+    currentIndex++;
+    if (currentIndex < totalQuestions) {
+        renderQuestion();
+    } else {
+        showSubmitScreen();
+    }
+};
+
+/* ── Final submit screen ── */
+function showSubmitScreen() {
+    clearInterval(countdown);
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('timer').style.display = 'none';
+
+    document.getElementById('quiz-container').innerHTML = `
+        <div class="divider"></div>
+        <label class="field-label" for="username">Your Name</label>
+        <input id="username" class="text-input" placeholder="Enter your name" autocomplete="off">
+        <button class="submit-btn" onclick="submitQuiz()">Submit →</button>
+    `;
+}
+
+/* ── Submit ── */
+function submitQuiz() {
+    clearInterval(countdown);
+    const username = document.getElementById('username')?.value?.trim();
+    const statusMsg = document.getElementById('status-msg');
+    statusMsg.textContent = '';
+
+    if (!username) {
+        statusMsg.textContent = 'Please enter your name.';
+        return;
+    }
+
+    const btn = document.querySelector('#quiz-container .submit-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+
+    fetch(`/api/quizzes/${quizId}/submit/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ username, answers })
+    })
     .then(res => res.json())
     .then(data => {
-      document.getElementById("quiz-title").innerText = data.title;
-
-      questions = data.questions;
-      totalQuestions = questions.length;
-
-      renderQuestion();
-      startTimer();
+        if (data.error) { statusMsg.textContent = data.error; return; }
+        localStorage.setItem('quiz_result', JSON.stringify(data));
+        window.location.href = '/result/';
     })
     .catch(err => {
-      console.error(err);
-      document.getElementById("quiz-title").innerText = "Error loading quiz.";
+        console.error(err);
+        statusMsg.textContent = 'Submission failed. Please try again.';
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit →'; }
     });
 }
 
-/* ================= RENDER QUESTION ================= */
-function renderQuestion() {
-  const container = document.getElementById("quiz-container");
-  const nextBtn = document.getElementById("next-btn");
-
-  const q = questions[currentIndex];
-
-  const choicesHtml = q.choices.map(c => `
-    <label class="choice-label">
-      <input type="radio" name="choice" value="${c.id}">
-      <span class="choice-dot"></span>
-      <span class="choice-text">${c.text}</span>
-    </label>
-  `).join("");
-
-  container.innerHTML = `
-    <div class="question-meta">
-      Question ${currentIndex + 1} of ${totalQuestions}
-    </div>
-
-    <div class="question-text">${q.text}</div>
-
-    <div class="choices">${choicesHtml}</div>
-  `;
-
-  nextBtn.style.display = "block";
-
-  if (currentIndex === totalQuestions - 1) {
-    nextBtn.textContent = "Finish →";
-  } else {
-    nextBtn.textContent = "Next →";
-  }
-
-  updateProgress();
-}
-/* ================================================== */
-
-/* ================= NEXT BUTTON ================= */
-document.getElementById("next-btn").onclick = () => {
-
-  const selected = document.querySelector("input[name='choice']:checked");
-
-  if (!selected) {
-    alert("Please select an answer.");
-    return;
-  }
-
-  answers.push({
-    question_id: questions[currentIndex].id,
-    choice_id: parseInt(selected.value)
-  });
-
-  currentIndex++;
-
-  if (currentIndex < totalQuestions) {
-    renderQuestion();
-  } else {
-    showSubmitScreen();
-  }
-};
-/* ============================================== */
-
-/* ================= FINAL SCREEN ================= */
-function showSubmitScreen() {
-  const container = document.getElementById("quiz-container");
-  const nextBtn = document.getElementById("next-btn");
-
-  clearInterval(countdown); // ✅ STOP TIMER HERE
-
-  nextBtn.style.display = "none";
-
-  container.innerHTML = `
-    <div class="name-field">
-      <label class="field-label">Your Name</label>
-      <input id="username" class="text-input" placeholder="Enter your name">
-    </div>
-
-    <button class="submit-btn" onclick="submitQuiz()">
-      Submit →
-    </button>
-  `;
-}
-/* ================================================= */
-
-/* ================= SUBMIT ================= */
-function submitQuiz() {
-  clearInterval(countdown);
-
-  const username = document.getElementById("username")?.value?.trim();
-  const statusMsg = document.getElementById("status-msg");
-
-  statusMsg.textContent = "";
-
-  if (!username) {
-    statusMsg.textContent = "Please enter your name.";
-    return;
-  }
-
-  const btn = document.querySelector(".submit-btn");
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "Submitting...";
-  }
-
-  fetch(`/api/quizzes/${quizId}/submit/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": getCSRFToken()
-    },
-    body: JSON.stringify({
-      username,
-      answers
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      statusMsg.textContent = data.error;
-      return;
-    }
-
-    localStorage.setItem("quiz_result", JSON.stringify(data));
-    window.location.href = "/result/";
-  })
-  .catch(err => {
-    console.error(err);
-    statusMsg.textContent = "Submission failed.";
-  });
-}
-/* ============================================== */
-
-/* ================= PROGRESS ================= */
+/* ── Progress bar ── */
 function updateProgress() {
-  const progress = document.getElementById("progress");
-  progress.style.width = `${(currentIndex / totalQuestions) * 100}%`;
+    document.getElementById('progress').style.width =
+        `${(currentIndex / totalQuestions) * 100}%`;
 }
-/* ============================================== */
-
 </script>
-
 </body>
 </html>

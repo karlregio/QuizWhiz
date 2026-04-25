@@ -26,11 +26,9 @@
         </div>
 
         <ul id="leaderboard-list">
-            <div class="loading-state">Loading leaderboard<span style="animation:blink 1s step-end infinite;display:inline-block">_</span></div>
+            <div class="loading-state">Loading leaderboard<span>_</span></div>
         </ul>
     </div>
-
-    <style>@keyframes blink { 50% { opacity: 0; } }</style>
 
     <script>
         fetch('/api/leaderboard/')
@@ -52,9 +50,14 @@
 
                     const medal = rank === 1 ? '①' : rank === 2 ? '②' : rank === 3 ? '③' : rank;
 
+                    // #1 gets a crown prefix on their name
+                    const nameHtml = rank === 1
+                        ? `<span class="lb-crown">${p.username}</span>`
+                        : p.username;
+
                     li.innerHTML = `
                         <div class="lb-rank">${medal}</div>
-                        <div class="lb-name">${p.username}</div>
+                        <div class="lb-name">${nameHtml}</div>
                         <div class="lb-score">${p.score}/${p.total_questions}</div>
                         <div class="lb-pct">${p.percentage}%</div>
                         <div class="lb-feedback">${p.feedback}</div>

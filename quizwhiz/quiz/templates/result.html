@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Result — QuizWhiz</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
-
 <body>
 <div class="container">
 
@@ -20,7 +17,6 @@
     <div class="score-display" id="score-num">—</div>
     <div class="score-sub" id="score-sub">out of — questions</div>
 
-    <!-- PROGRESS RING -->
     <div class="ring-wrap">
         <svg class="progress-ring" width="80" height="80" viewBox="0 0 80 80">
             <circle class="ring-bg" cx="40" cy="40" r="36"/>
@@ -29,32 +25,26 @@
         </svg>
     </div>
 
-    <!-- STATS -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Score</div>
             <div class="stat-value" id="stat-score">—</div>
         </div>
-
         <div class="stat-card">
             <div class="stat-label">Percentage</div>
             <div class="stat-value good" id="stat-pct">—</div>
         </div>
-
-        <!-- ✅ NEW: FINISHED TIME -->
         <div class="stat-card">
             <div class="stat-label">Finished At</div>
-            <div class="stat-value" id="finished-time">—</div>
+            <div class="stat-value" id="finished-time" style="font-size:14px;">—</div>
         </div>
     </div>
 
-    <!-- FEEDBACK -->
     <div class="feedback-box">
         <div class="stat-label">Feedback</div>
         <div class="feedback-text" id="feedback-text">—</div>
     </div>
 
-    <!-- NAV -->
     <div class="nav-links">
         <a class="nav-link primary" href="/leaderboard/">Leaderboard</a>
         <a class="nav-link" href="/">Back</a>
@@ -69,26 +59,17 @@ if (!result || result.score === undefined) {
     document.getElementById('score-num').textContent = '?';
     document.getElementById('score-sub').textContent = 'No result found.';
 } else {
-
     const pct = parseFloat(result.percentage);
     const circumference = 226;
 
-    // BASIC INFO
     document.getElementById('score-num').textContent = result.score;
-    document.getElementById('score-sub').textContent =
-        `out of ${result.total_questions} questions`;
-
-    document.getElementById('stat-score').textContent =
-        `${result.score}/${result.total_questions}`;
-
+    document.getElementById('score-sub').textContent = `out of ${result.total_questions} questions`;
+    document.getElementById('stat-score').textContent = `${result.score}/${result.total_questions}`;
     document.getElementById('stat-pct').textContent = `${pct}%`;
     document.getElementById('feedback-text').textContent = result.feedback;
-
-    // ✅ FINISHED TIME
     document.getElementById('finished-time').textContent =
-        new Date(result.taken_at).toLocaleString();
+        result.taken_at ? new Date(result.taken_at).toLocaleString() : '—';
 
-    // RING
     document.getElementById('ring-text').textContent = `${pct}%`;
 
     requestAnimationFrame(() => {
@@ -97,6 +78,5 @@ if (!result || result.score === undefined) {
     });
 }
 </script>
-
 </body>
 </html>

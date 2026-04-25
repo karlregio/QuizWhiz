@@ -14,8 +14,6 @@ from .serializers import (
 )
 
 
-# ---------- TEMPLATE VIEWS ----------
-
 def index_view(request):
     return render(request, 'index.html')
 

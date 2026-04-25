@@ -1,136 +1,130 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QuizWhiz</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
-
-  </head>
-  <body>
+</head>
+<body>
     <div class="container">
-      <div class="brand">
-        <div class="brand-logo">QuizWhiz</div>
-        <div class="brand-tag">v2.0</div>
-      </div>
+        <div class="brand">
+            <div class="brand-logo">QuizWhiz</div>
+            <div class="brand-tag">v2.0</div>
+        </div>
 
-      <div class="section-label" id="section-label">Select Category</div>
+        <div class="section-label" id="section-label">Select Category</div>
 
-      <ul id="item-list">
-        <div class="loading-state">Loading<span>_</span></div>
-      </ul>
+        <ul id="item-list">
+            <div class="loading-state">Loading<span>_</span></div>
+        </ul>
 
-      <div class="footer-links">
-        <a href="/leaderboard/">Leaderboard</a>
-        <a href="/" id="back-link" style="display: none;">← Back</a>
-      </div>
+        <div class="footer-links">
+            <a href="/leaderboard/">Leaderboard</a>
+            <a href="/" id="back-link" style="display:none;">← Back</a>
+        </div>
     </div>
 
     <script>
-      let currentCategory = null;
-      let currentSubcategory = null;
+        let currentCategory = null;
 
-      function loadCategories() {
-        document.getElementById('section-label').textContent = 'Select Category';
-        document.getElementById('back-link').style.display = 'none';
-        currentCategory = null;
-        currentSubcategory = null;
+        function loadCategories() {
+            document.getElementById('section-label').textContent = 'Select Category';
+            document.getElementById('back-link').style.display = 'none';
+            currentCategory = null;
 
-        fetch('/api/categories/')
-          .then(res => res.json())
-          .then(data => {
-            const list = document.getElementById('item-list');
-            list.innerHTML = '';
+            fetch('/api/categories/')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('item-list');
+                    list.innerHTML = '';
 
-            if (!data.length) {
-              list.innerHTML = '<div class="loading-state">No categories found.</div>';
-              return;
-            }
+                    if (!data.length) {
+                        list.innerHTML = '<div class="loading-state">No categories found.</div>';
+                        return;
+                    }
 
-            data.forEach((cat, i) => {
-              const li = document.createElement('li');
-              li.className = 'quiz-item';
-              li.innerHTML = `
-                <span class="quiz-num">${String(i + 1).padStart(2, '0')}</span>
-                <span class="quiz-title">${cat.name}</span>
-                <span class="quiz-arrow">→</span>
-                <a href="#" onclick="loadSubcategories(${cat.id}, '${cat.name}'); return false;"></a>
-              `;
-              list.appendChild(li);
-            });
-          });
-      }
+                    data.forEach((cat, i) => {
+                        const li = document.createElement('li');
+                        li.className = 'quiz-item';
+                        li.innerHTML = `
+                            <span class="quiz-num">${String(i + 1).padStart(2, '0')}</span>
+                            <span class="quiz-title">${cat.name}</span>
+                            <span class="quiz-arrow">→</span>
+                            <a href="#" onclick="loadSubcategories(${cat.id}, '${cat.name}'); return false;"></a>
+                        `;
+                        list.appendChild(li);
+                    });
+                });
+        }
 
-      function loadSubcategories(categoryId, categoryName) {
-        currentCategory = { id: categoryId, name: categoryName };
-        document.getElementById('section-label').textContent = `Select Topic: ${categoryName}`;
-        document.getElementById('back-link').style.display = 'inline';
-        document.getElementById('back-link').onclick = () => { loadCategories(); return false; };
+        function loadSubcategories(categoryId, categoryName) {
+            currentCategory = { id: categoryId, name: categoryName };
+            document.getElementById('section-label').textContent = `Select Topic: ${categoryName}`;
+            const backLink = document.getElementById('back-link');
+            backLink.style.display = 'inline';
+            backLink.onclick = () => { loadCategories(); return false; };
 
-        fetch(`/api/categories/${categoryId}/subcategories/`)
-          .then(res => res.json())
-          .then(data => {
-            const list = document.getElementById('item-list');
-            list.innerHTML = '';
+            fetch(`/api/categories/${categoryId}/subcategories/`)
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('item-list');
+                    list.innerHTML = '';
 
-            if (!data.length) {
-              list.innerHTML = '<div class="loading-state">No topics found.</div>';
-              return;
-            }
+                    if (!data.length) {
+                        list.innerHTML = '<div class="loading-state">No topics found.</div>';
+                        return;
+                    }
 
-            data.forEach((subcategory, i) => {
-              const li = document.createElement('li');
-              li.className = 'quiz-item';
-              li.innerHTML = `
-                <span class="quiz-num">${String(i + 1).padStart(2, '0')}</span>
-                <span class="quiz-title">${subcategory.name}</span>
-                <span class="quiz-arrow">→</span>
-                <a href="#" onclick="loadQuizzes(${subcategory.id}, '${subcategory.name}'); return false;"></a>
-              `;
-              list.appendChild(li);
-            });
-          });
-      }
+                    data.forEach((sub, i) => {
+                        const li = document.createElement('li');
+                        li.className = 'quiz-item';
+                        li.innerHTML = `
+                            <span class="quiz-num">${String(i + 1).padStart(2, '0')}</span>
+                            <span class="quiz-title">${sub.name}</span>
+                            <span class="quiz-arrow">→</span>
+                            <a href="#" onclick="loadQuizzes(${sub.id}, '${sub.name}'); return false;"></a>
+                        `;
+                        list.appendChild(li);
+                    });
+                });
+        }
 
-      function loadQuizzes(subcategoryId, subcategoryName) {
-        currentSubcategory = { id: subcategoryId, name: subcategoryName };
-        document.getElementById('section-label').textContent = `Select Quiz: ${subcategoryName}`;
-        document.getElementById('back-link').style.display = 'inline';
-        document.getElementById('back-link').onclick = () => { loadSubcategories(currentCategory.id, currentCategory.name); return false; };
+        function loadQuizzes(subcategoryId, subcategoryName) {
+            document.getElementById('section-label').textContent = `Select Quiz: ${subcategoryName}`;
+            const backLink = document.getElementById('back-link');
+            backLink.style.display = 'inline';
+            backLink.onclick = () => { loadSubcategories(currentCategory.id, currentCategory.name); return false; };
 
-        fetch(`/api/subcategories/${subcategoryId}/quizzes/`)
-          .then(res => res.json())
-          .then(data => {
-            const list = document.getElementById('item-list');
-            list.innerHTML = '';
+            fetch(`/api/subcategories/${subcategoryId}/quizzes/`)
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('item-list');
+                    list.innerHTML = '';
 
-            if (!data.length) {
-              list.innerHTML = '<div class="loading-state">No quizzes found.</div>';
-              return;
-            }
+                    if (!data.length) {
+                        list.innerHTML = '<div class="loading-state">No quizzes found.</div>';
+                        return;
+                    }
 
-            data.forEach((q, i) => {
-              const li = document.createElement('li');
-              li.className = 'quiz-item';
-              li.innerHTML = `
-                <span class="quiz-num">${String(i + 1).padStart(2, '0')}</span>
-                <span class="quiz-title">${q.title}</span>
-                <span class="quiz-arrow">→</span>
-                <a href="/quiz/?id=${q.id}" aria-label="Take quiz: ${q.title}"></a>
-              `;
-              list.appendChild(li);
-            });
-          });
-      }
+                    data.forEach((q, i) => {
+                        const li = document.createElement('li');
+                        li.className = 'quiz-item';
+                        li.innerHTML = `
+                            <span class="quiz-num">${String(i + 1).padStart(2, '0')}</span>
+                            <span class="quiz-title">${q.title}</span>
+                            <span class="quiz-arrow">→</span>
+                            <a href="/quiz/?id=${q.id}" aria-label="Take quiz: ${q.title}"></a>
+                        `;
+                        list.appendChild(li);
+                    });
+                });
+        }
 
-      // Start with categories
-      loadCategories();
+        loadCategories();
     </script>
-  </body>
+</body>
 </html>
