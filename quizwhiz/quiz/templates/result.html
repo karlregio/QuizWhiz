@@ -1,161 +1,142 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Result — QuizWhiz</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
-  </head>
-  <body>
-    <div class="container">
-      <div class="label">Quiz Complete</div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Result — QuizWhiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+</head>
+<body>
+<div class="container">
 
-      <div class="score-display" id="score-num">—</div>
-      <div class="score-sub" id="score-sub">out of — questions</div>
+  <div class="label">Quiz Complete</div>
 
-      <div class="ring-wrap">
-        <svg class="progress-ring" width="80" height="80" viewBox="0 0 80 80">
-          <circle class="ring-bg" cx="40" cy="40" r="36" />
-          <circle class="ring-fill" id="ring-fill" cx="40" cy="40" r="36" />
-          <text class="ring-text" x="40" y="40" id="ring-text">0%</text>
-        </svg>
-      </div>
+  <div class="score-display" id="score-num">—</div>
+  <div class="score-sub" id="score-sub">out of — questions</div>
 
-      <!-- ✅ STATS GRID ONLY -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Score</div>
-          <div class="stat-value" id="stat-score">—</div>
-        </div>
+  <div class="ring-wrap">
+    <svg class="progress-ring" width="80" height="80" viewBox="0 0 80 80">
+      <circle class="ring-bg" cx="40" cy="40" r="36" />
+      <circle class="ring-fill" id="ring-fill" cx="40" cy="40" r="36" />
+      <text class="ring-text" x="40" y="40" id="ring-text">0%</text>
+    </svg>
+  </div>
 
-        <div class="stat-card">
-          <div class="stat-label">Percentage</div>
-          <div class="stat-value good" id="stat-pct">—</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-label">Time taken</div>
-          <div class="stat-value" id="finished-time" style="font-size: 14px">
-            —
-          </div>
-        </div>
-      </div>
-
-      <!-- ✅ MOVE REVIEW SECTION HERE -->
-      <div class="review-section">
-        <div class="section-title">Review Answers</div>
-        <ul id="review-list"></ul>
-      </div>
-
-      <div class="feedback-box">
-        <div class="stat-label">Feedback</div>
-        <div class="feedback-text" id="feedback-text">—</div>
-      </div>
-
-      <div class="nav-links">
-        <a class="nav-link primary" href="/leaderboard/">Leaderboard</a>
-        <a class="nav-link" href="/">Back</a>
-      </div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Score</div>
+      <div class="stat-value" id="stat-score">—</div>
     </div>
+    <div class="stat-card">
+      <div class="stat-label">Percentage</div>
+      <div class="stat-value good" id="stat-pct">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Time Taken</div>
+      <div class="stat-value" id="finished-time" style="font-size:20px;">—</div>
+    </div>
+  </div>
 
-    <script>
-      function renderResult(result) {
-        if (!result) return;
+  <div class="review-section">
+    <div class="section-title">Review Answers</div>
+    <ul id="review-list"></ul>
+  </div>
 
-        const pct = parseFloat(result.percentage || 0);
-        const circumference = 226;
+  <div class="feedback-box">
+    <div class="stat-label">Feedback</div>
+    <div class="feedback-text" id="feedback-text">—</div>
+  </div>
 
-        document.getElementById("score-num").textContent = result.score;
-        document.getElementById("score-sub").textContent =
-          `out of ${result.total_questions} questions`;
+  <div class="nav-links">
+    <a class="nav-link primary" href="/leaderboard/">Leaderboard</a>
+    <a class="nav-link" href="/">Back</a>
+  </div>
 
-        document.getElementById("stat-score").textContent =
-          `${result.score}/${result.total_questions}`;
+</div>
 
-        document.getElementById("stat-pct").textContent = `${pct.toFixed(2)}%`;
+<script>
+function renderResult(result) {
+  if (!result) return;
 
-        document.getElementById("feedback-text").textContent = result.feedback;
+  const pct          = parseFloat(result.percentage || 0);
+  const circumference = 226;
 
-        document.getElementById("finished-time").textContent = result.time_taken
-          ? result.time_taken + "s"
-          : "—";
+  document.getElementById('score-num').textContent  = result.score;
+  document.getElementById('score-sub').textContent  = `out of ${result.total_questions} questions`;
+  document.getElementById('stat-score').textContent = `${result.score}/${result.total_questions}`;
+  document.getElementById('stat-pct').textContent   = `${pct.toFixed(1)}%`;
+  document.getElementById('feedback-text').textContent = result.feedback;
+  document.getElementById('finished-time').textContent = result.time_taken ? `${result.time_taken}s` : '—';
+  document.getElementById('ring-text').textContent  = `${pct.toFixed(0)}%`;
 
-        document.getElementById("ring-text").textContent = `${pct.toFixed(0)}%`;
+  requestAnimationFrame(() => {
+    const offset = circumference - (pct / 100) * circumference;
+    document.getElementById('ring-fill').style.strokeDashoffset = offset;
+  });
 
-        requestAnimationFrame(() => {
-          const offset = circumference - (pct / 100) * circumference;
-          document.getElementById("ring-fill").style.strokeDashoffset = offset;
-        });
+  const reviewList = document.getElementById('review-list');
+  if (reviewList && result.answers_review && result.answers_review.length) {
+    reviewList.innerHTML = '';
 
-        // ANSWER REVIEW
-        const reviewList = document.getElementById("review-list");
-        if (reviewList && result.answers_review) {
-          reviewList.innerHTML = "";
+    result.answers_review.forEach((item, i) => {
+      const li = document.createElement('li');
+      li.className = `review-item ${item.is_correct ? 'correct' : 'wrong'}`;
+      li.style.animationDelay = `${0.8 + i * 0.04}s`;
 
-          result.answers_review.forEach((item, i) => {
-            const li = document.createElement("li");
-
-            li.className = `review-item ${item.is_correct ? "correct" : "wrong"}`;
-
-            li.innerHTML = `
+      li.innerHTML = `
         <div class="review-header">
           <span>Q${i + 1}: ${item.question}</span>
           <span class="toggle-icon">+</span>
         </div>
-
         <div class="review-body">
-          <div class="review-answer ${item.is_correct ? "correct" : "wrong"}">
-            ${item.is_correct ? "✅" : "❌"} Your Answer: ${item.user_answer}
+          <div class="review-answer ${item.is_correct ? 'correct' : 'wrong'}">
+            ${item.is_correct ? '✅' : '❌'} Your answer: ${item.user_answer}
           </div>
-
-          ${
-            !item.is_correct
-              ? `<div class="review-answer correct">
-                   Correct Answer: ${item.correct_answer}
-                 </div>`
-              : ""
-          }
+          ${!item.is_correct ? `
+            <div class="review-answer correct">
+              ✅ Correct answer: ${item.correct_answer}
+            </div>` : ''}
         </div>
       `;
 
-            li.querySelector(".review-header").onclick = () => {
-              li.classList.toggle("expanded");
-              const icon = li.querySelector(".toggle-icon");
-              icon.textContent = li.classList.contains("expanded") ? "−" : "+";
-            };
+      li.querySelector('.review-header').onclick = () => {
+        li.classList.toggle('expanded');
+        li.querySelector('.toggle-icon').textContent =
+          li.classList.contains('expanded') ? '−' : '+';
+      };
 
-            reviewList.appendChild(li);
-          });
-        }
-      }
+      reviewList.appendChild(li);
+    });
+  } else if (reviewList) {
+    reviewList.innerHTML = '<div class="loading-state" style="padding:16px 0;">No review data available.</div>';
+  }
+}
 
-      // 🚀 MAIN LOGIC
-      document.addEventListener("DOMContentLoaded", function () {
-        const params = new URLSearchParams(window.location.search);
-        const resultId = params.get("id");
+document.addEventListener('DOMContentLoaded', function () {
+  const params   = new URLSearchParams(window.location.search);
+  const resultId = params.get('id');
 
-        if (resultId) {
-          // 🔥 FROM HISTORY
-          fetch(`/api/results/${resultId}/`, {
-            credentials: "include",
-          })
-            .then((res) => res.json())
-            .then((data) => renderResult(data))
-            .catch(() => {
-              document.getElementById("score-num").textContent = "?";
-            });
-        } else {
-          // 🔥 FROM QUIZ SUBMIT
-          const result = JSON.parse(localStorage.getItem("quiz_result"));
-          renderResult(result);
-        }
+  if (resultId) {
+    fetch(`/api/results/${resultId}/`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => renderResult(data))
+      .catch(() => {
+        document.getElementById('score-num').textContent = '?';
+        document.getElementById('score-sub').textContent = 'Failed to load result.';
       });
-    </script>
-  </body>
+  } else {
+    const result = JSON.parse(localStorage.getItem('quiz_result'));
+    if (result) {
+      renderResult(result);
+    } else {
+      document.getElementById('score-num').textContent = '?';
+      document.getElementById('score-sub').textContent = 'No result found.';
+    }
+  }
+});
+</script>
+</body>
 </html>

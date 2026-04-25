@@ -10,69 +10,66 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
-    <div class="container">
-        <a class="back-link" href="/">← Back</a>
+<div class="container">
+    <a class="back-link" href="/">← Back</a>
 
-        <div class="page-header">
-            <div class="page-title">Leaderboard</div>
-            <div class="page-sub">Top performers across all quizzes</div>
-        </div>
-
-        <div class="table-header">
-            <span style="text-align:center">#</span>
-            <span>Player</span>
-
-            <span style="text-align:right">Score</span>
-            <span style="text-align:right">Pct</span>
-        </div>
-
-        <ul id="leaderboard-list">
-            <div class="loading-state">Loading leaderboard<span>_</span></div>
-        </ul>
+    <div class="page-header">
+        <div class="page-title">Leaderboard</div>
+        <div class="page-sub">Top performers across all quizzes</div>
     </div>
 
-    <script>
-        fetch('/api/leaderboard/')
-            .then(res => res.json())
-            .then(data => {
-                const list = document.getElementById('leaderboard-list');
-                list.innerHTML = '';
+    <div class="lb-table-header">
+        <span style="text-align:center">#</span>
+        <span>Player</span>
+        <span style="text-align:right">Score</span>
+        <span style="text-align:right">Pct</span>
+        <span style="text-align:right">Time</span>
+    </div>
 
-                if (!data.length) {
-                    list.innerHTML = '<div class="loading-state">No entries yet. Be the first!</div>';
-                    return;
-                }
+    <ul id="leaderboard-list">
+        <div class="loading-state">Loading leaderboard<span>_</span></div>
+    </ul>
+</div>
 
-                data.forEach((p, i) => {
-                    const rank = i + 1;
-                    const li = document.createElement('li');
-                    li.className = `lb-row${rank <= 3 ? ` rank-${rank}` : ''}`;
-                    li.style.animationDelay = `${i * 0.05}s`;
+<script>
+    fetch('/api/leaderboard/')
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
 
-                    const medal = rank === 1 ? '①' : rank === 2 ? '②' : rank === 3 ? '③' : rank;
+            if (!data.length) {
+                list.innerHTML = '<div class="loading-state">No entries yet. Be the first!</div>';
+                return;
+            }
 
-                    // #1 gets a crown prefix on their name
-                    const nameHtml = rank === 1
-                        ? `<span class="lb-crown">${p.username}</span>`
-                        : p.username;
+            data.forEach((p, i) => {
+                const rank = i + 1;
+                const li = document.createElement('li');
+                li.className = `lb-row${rank <= 3 ? ` rank-${rank}` : ''}`;
+                li.style.animationDelay = `${i * 0.05}s`;
 
-                    li.innerHTML = `
-                        <div class="lb-rank">${medal}</div>
-                        <div class="lb-name">${nameHtml}</div>
-                        <div class="lb-score">${p.score}/${p.total_questions}</div>
-                        <div class="lb-pct">${Number(p.percentage).toFixed(0)}%<div>
-                        <div class="lb-time">${p.time_taken}s</div>
-                        <div class="lb-feedback">${p.feedback}</div>
+                const medal = rank === 1 ? '①' : rank === 2 ? '②' : rank === 3 ? '③' : rank;
+                const nameHtml = rank === 1
+                    ? `<span class="lb-crown">${p.username}</span>`
+                    : p.username;
 
-                    `;
-                    list.appendChild(li);
-                });
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById('leaderboard-list').innerHTML =
-                    '<div class="loading-state">Failed to load leaderboard.</div>';
+                li.innerHTML = `
+                    <div class="lb-rank">${medal}</div>
+                    <div class="lb-name">${nameHtml}</div>
+                    <div class="lb-score">${p.score}/${p.total_questions}</div>
+                    <div class="lb-pct">${Number(p.percentage).toFixed(0)}%</div>
+                    <div class="lb-time">${p.time_taken ?? '—'}s</div>
+                    <div class="lb-feedback">${p.feedback}</div>
+                `;
+                list.appendChild(li);
             });
-    </script>
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('leaderboard-list').innerHTML =
+                '<div class="loading-state">Failed to load leaderboard.</div>';
+        });
+</script>
 </body>
 </html>

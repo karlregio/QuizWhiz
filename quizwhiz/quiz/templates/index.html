@@ -4,31 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>QuizWhiz</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/main.css' %}" />
-
-  <style>
-    .auth-buttons {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      margin-bottom: 10px;
-    }
-  </style>
 </head>
-
 <body>
-<div class="container">
+<div class="container" id="app" data-authenticated="{{ request.user.is_authenticated|lower }}">
 
-  <!-- 🔐 AUTH -->
   <div class="auth-buttons">
     {% if request.user.is_authenticated %}
-      <span class="nav-link">Hi, {{ request.user.username }}</span>
-      <a href="/history/" class="nav-link" id="history-link">My History</a>
+      <span class="nav-link" style="cursor:default;">Hi, {{ request.user.username }}</span>
+      <a href="/history/" class="nav-link">My History</a>
       <a href="/logout/" class="nav-link">Logout</a>
     {% else %}
       <a href="/login/" class="nav-link primary">Login</a>
@@ -36,31 +23,23 @@
     {% endif %}
   </div>
 
-  <!-- BRAND -->
   <div class="brand">
     <div class="brand-logo">QuizWhiz</div>
     <div class="brand-tag">v2.0</div>
   </div>
+  <div class="brand-sub">Test your knowledge and climb the leaderboard</div>
 
   <div class="section-label" id="section-label">
     {% if request.user.is_authenticated %}
-      Welcome, {{ request.user.username }} — Choose a Category
+      Select Category
     {% else %}
       Please login to start quizzes
     {% endif %}
   </div>
 
-  <div class="brand-sub">Test your knowledge and climb the leaderboard</div>
-
-  <!-- LIST -->
   <ul id="item-list"></ul>
+  <div id="loading" class="loading-state" style="display:none;">Loading<span>_</span></div>
 
-  <!-- LOADING -->
-  <div id="loading" class="loading-state" style="display:none;">
-    Loading<span>_</span>
-  </div>
-
-  <!-- FOOTER -->
   <div class="footer-links">
     <a href="/leaderboard/">Leaderboard</a>
     <a href="/" id="back-link" style="display:none;">← Back</a>
@@ -69,129 +48,86 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function () {
 
-  let currentCategory = null;
-  const list = document.getElementById("item-list");
-  const loading = document.getElementById("loading");
-  const label = document.getElementById("section-label");
-  const backLink = document.getElementById("back-link");
+  const app      = document.getElementById('app');
+  const isAuth   = app.dataset.authenticated === 'true';
+  const list     = document.getElementById('item-list');
+  const loading  = document.getElementById('loading');
+  const label    = document.getElementById('section-label');
+  const backLink = document.getElementById('back-link');
 
-  function showLoading() {
-    loading.style.display = "block";
-    list.innerHTML = "";
+  function showLoading() { loading.style.display = 'block'; list.innerHTML = ''; }
+  function hideLoading() { loading.style.display = 'none'; }
+
+  function makeItem(num, title, onClick) {
+    const li = document.createElement('li');
+    li.className = 'quiz-item';
+    li.innerHTML = `
+      <span class="quiz-num">${String(num).padStart(2, '0')}</span>
+      <span class="quiz-title">${title}</span>
+      <span class="quiz-arrow">→</span>
+    `;
+    li.onclick = onClick;
+    return li;
   }
 
-  function hideLoading() {
-    loading.style.display = "none";
-  }
-
-  // -----------------------
-  // LOAD CATEGORIES
-  // -----------------------
   function loadCategories() {
-    label.textContent = "Select Category";
-    backLink.style.display = "none";
-    currentCategory = null;
-
+    label.textContent = 'Select Category';
+    backLink.style.display = 'none';
     showLoading();
 
-    fetch("/api/categories/", { credentials: "include" })
+    fetch('/api/categories/', { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         hideLoading();
-
         if (!data.length) {
-          list.innerHTML = '<li class="loading-state">No categories found.</li>';
+          list.innerHTML = '<div class="loading-state">No categories found.</div>';
           return;
         }
-
-        data.forEach((cat, i) => {
-          const li = document.createElement("li");
-          li.className = "quiz-item";
-
-          li.innerHTML = `
-            <span class="quiz-num">${String(i + 1).padStart(2, "0")}</span>
-            <span class="quiz-title">${cat.name}</span>
-            <span class="quiz-arrow">→</span>
-          `;
-
-          li.onclick = () => loadQuizzes(cat.id, cat.name);
-
-          list.appendChild(li);
-        });
+        data.forEach((cat, i) =>
+          list.appendChild(makeItem(i + 1, cat.name, () => loadQuizzes(cat.id, cat.name)))
+        );
       })
-      .catch(err => {
-        console.error(err);
+      .catch(() => {
         hideLoading();
-        list.innerHTML = '<li class="loading-state">Failed to load categories.</li>';
+        list.innerHTML = '<div class="loading-state">Failed to load categories.</div>';
       });
   }
 
-  // -----------------------
-  // LOAD QUIZZES
-  // -----------------------
   function loadQuizzes(categoryId, categoryName) {
-    currentCategory = { id: categoryId, name: categoryName };
-
     label.textContent = `Select Quiz: ${categoryName}`;
-    backLink.style.display = "inline";
-
-    backLink.onclick = () => {
-      loadCategories();
-      return false;
-    };
-
+    backLink.style.display = 'inline';
+    backLink.onclick = () => { loadCategories(); return false; };
     showLoading();
 
-    fetch(`/api/categories/${categoryId}/quizzes/`, {
-      credentials: "include"
-    })
+    fetch(`/api/categories/${categoryId}/quizzes/`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         hideLoading();
-
         if (!data.length) {
-          list.innerHTML = '<li class="loading-state">No quizzes found.</li>';
+          list.innerHTML = '<div class="loading-state">No quizzes found.</div>';
           return;
         }
-
-        data.forEach((q, i) => {
-          const li = document.createElement("li");
-          li.className = "quiz-item";
-
-          li.innerHTML = `
-            <span class="quiz-num">${String(i + 1).padStart(2, "0")}</span>
-            <span class="quiz-title">${q.title}</span>
-            <span class="quiz-arrow">→</span>
-          `;
-
-          li.onclick = () => {
+        data.forEach((q, i) =>
+          list.appendChild(makeItem(i + 1, q.title, () => {
             window.location.href = `/quiz/?id=${q.id}`;
-          };
-
-          list.appendChild(li);
-        });
+          }))
+        );
       })
-      .catch(err => {
-        console.error(err);
+      .catch(() => {
         hideLoading();
-        list.innerHTML = '<li class="loading-state">Failed to load quizzes.</li>';
+        list.innerHTML = '<div class="loading-state">Failed to load quizzes.</div>';
       });
   }
 
-  // -----------------------
-  // AUTH CHECK
-  // -----------------------
-  {% if request.user.is_authenticated %}
+  if (isAuth) {
     loadCategories();
-  {% else %}
-    list.innerHTML = '<li class="loading-state">Please login first.</li>';
-  {% endif %}
+  } else {
+    list.innerHTML = '<div class="loading-state">Please login to start quizzes.</div>';
+  }
 
 });
-
 </script>
-
 </body>
 </html>

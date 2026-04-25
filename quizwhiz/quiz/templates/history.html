@@ -1,117 +1,82 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>History — QuizWhiz</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
-  </head>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+<div class="container">
+    <a class="back-link" href="/">← Back</a>
 
-  <body>
-    <div class="container">
-      <a class="back-link" href="/">← Back</a>
-
-      <div class="page-header">
-        <div class="page-title">Your Quiz History</div>
+    <div class="page-header">
+        <div class="page-title">Your History</div>
         <div class="page-sub">Track your performance over time</div>
-      </div>
-
-      <div class="table-header">
-        <span>Quiz</span>
-        <span style="text-align: right">Score</span>
-        <span style="text-align: right">%</span>
-        <span style="text-align: right">Time</span>
-        <span style="text-align: right">Date</span>
-      </div>
-
-      <ul id="history-list">
-        <div class="loading-state">Loading history<span>_</span></div>
-      </ul>
     </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        fetch("/api/my-results/", {
-          credentials: "include",
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error("Failed to load");
-            return res.json();
-          })
-          .then((data) => {
-            const list = document.getElementById("history-list");
-            list.innerHTML = "";
+    <div class="hist-table-header">
+        <span>Quiz</span>
+        <span style="text-align:right">Score</span>
+        <span style="text-align:right">%</span>
+        <span style="text-align:right">Time</span>
+        <span style="text-align:right">Date</span>
+    </div>
 
-            if (!data.length) {
-              list.innerHTML = `
-          <div class="loading-state">
-              No quiz attempts yet. Try one!
-          </div>
-        `;
-              return;
-            }
+    <ul id="history-list">
+        <div class="loading-state">Loading history<span>_</span></div>
+    </ul>
+</div>
 
-            data.forEach((r, i) => {
-              const li = document.createElement("li");
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/api/my-results/', { credentials: 'include' })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load');
+                return res.json();
+            })
+            .then(data => {
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
 
-              li.className = "history-row";
-              li.style.animationDelay = `${i * 0.05}s`;
+                if (!data.length) {
+                    list.innerHTML = '<div class="loading-state">No quiz attempts yet. Try one!</div>';
+                    return;
+                }
 
-              // truncate title
-              const title =
-                r.quiz_title.length > 25
-                  ? r.quiz_title.slice(0, 25) + "..."
-                  : r.quiz_title;
+                data.forEach((r, i) => {
+                    const li = document.createElement('li');
+                    li.className = 'history-row';
+                    li.style.animationDelay = `${i * 0.05}s`;
 
-              // format date
-              const date = new Date(r.taken_at).toLocaleDateString();
+                    const date = new Date(r.taken_at).toLocaleDateString();
+                    const pct  = parseFloat(r.percentage).toFixed(1);
 
-              li.innerHTML = `
-          <div class="col-quiz">
-              <div class="quiz-title">${title}</div>
-              <div class="quiz-feedback">${r.feedback}</div>
-          </div>
+                    li.innerHTML = `
+                        <div class="col-quiz">
+                            <div class="col-quiz-title">${r.quiz_title}</div>
+                            <div class="col-quiz-feedback">${r.feedback}</div>
+                        </div>
+                        <div class="col-score">${r.score}/${r.total_questions}</div>
+                        <div class="col-pct">${pct}%</div>
+                        <div class="col-time">${r.time_taken}s</div>
+                        <div class="col-date">${date}</div>
+                    `;
 
-          <div class="col-score">
-              ${r.score}/${r.total_questions}
-          </div>
+                    li.onclick = () => { window.location.href = `/result/?id=${r.id}`; };
 
-          <div class="col-pct">
-              ${parseFloat(r.percentage).toFixed(2)}%
-          </div>
-
-          <div class="col-time">
-              ${r.time_taken}s
-          </div>
-
-          <div class="col-date">
-              ${date}
-          </div>
-        `;
-
-              // make row clickable
-              li.style.cursor = "pointer";
-              li.onclick = () => {
-                window.location.href = `/result/?id=${r.id}`;
-              };
-
-              list.appendChild(li);
+                    list.appendChild(li);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('history-list').innerHTML =
+                    '<div class="loading-state">Failed to load history.</div>';
             });
-          })
-          .catch((err) => {
-            console.error(err);
-            document.getElementById("history-list").innerHTML =
-              '<div class="loading-state">Failed to load history.</div>';
-          });
-      });
-    </script>
-  </body>
+    });
+</script>
+</body>
 </html>
