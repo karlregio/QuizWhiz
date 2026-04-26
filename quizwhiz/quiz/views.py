@@ -6,6 +6,7 @@ import random
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
+from django.db.models import OuterRef, Subquery
 
 from .models import Category, Quiz, Result
 from .serializers import (
@@ -217,17 +218,54 @@ def submit_quiz(request, pk):
 @api_view(['GET'])
 def leaderboard_api(request):
     category_id = request.GET.get('category')
+    quiz_id = request.GET.get('quiz')
 
     results = Result.objects.select_related('quiz')
 
-    # 🎯 FILTER BY CATEGORY
+    # FILTERS
     if category_id:
         results = results.filter(quiz__category_id=category_id)
 
-    results = results.order_by('-score', '-percentage', '-taken_at')[:10]
+    if quiz_id:
+        results = results.filter(quiz_id=quiz_id)
 
-    serializer = ResultSerializer(results, many=True)
-    return Response(serializer.data)
+    # 🔥 BEST SCORE PER USER PER QUIZ (SQLite safe)
+    best_map = {}
+
+    for r in results:
+        key = (r.username, r.quiz_id)
+
+        if key not in best_map:
+            best_map[key] = r
+        else:
+            existing = best_map[key]
+
+            if (
+                r.score > existing.score or
+                (r.score == existing.score and r.percentage > existing.percentage) or
+                (r.score == existing.score and r.percentage == existing.percentage and r.time_taken < existing.time_taken)
+            ):
+                best_map[key] = r
+
+    best_results = list(best_map.values())
+
+    # FINAL SORT
+    best_results.sort(key=lambda r: (-r.score, -r.percentage, r.time_taken))
+
+    data = [
+        {
+            "username": r.username,
+            "quiz_title": r.quiz.title,
+            "score": r.score,
+            "total_questions": r.total_questions,
+            "percentage": r.percentage,
+            "feedback": r.feedback,
+            "time_taken": r.time_taken
+        }
+        for r in best_results[:10]
+    ]
+
+    return Response(data)
 
 
 # PUBLIC - list categories

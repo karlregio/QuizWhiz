@@ -4,14 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leaderboard — QuizWhiz</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
+
   <body>
     <div class="container">
       <a class="back-link" href="/">← Back</a>
@@ -21,14 +24,16 @@
         <div class="page-sub">Top performers across all quizzes</div>
       </div>
 
-      <select
-        id="category-filter"
-        class="lb-filter"
-        onchange="loadLeaderboard()"
-      >
+      <!-- FILTERS -->
+      <select id="category-filter" class="lb-filter">
         <option value="">All Categories</option>
       </select>
 
+      <select id="quiz-filter" class="lb-filter">
+        <option value="">All Quizzes</option>
+      </select>
+
+      <!-- TABLE -->
       <div class="lb-table-header">
         <span style="text-align: center">#</span>
         <span>Player</span>
@@ -43,28 +48,50 @@
     </div>
 
     <script>
+      const categoryFilter = document.getElementById("category-filter");
+      const quizFilter = document.getElementById("quiz-filter");
+
+      // LOAD CATEGORIES
       function loadCategories() {
         fetch("/api/categories/")
           .then((res) => res.json())
           .then((data) => {
-            const select = document.getElementById("category-filter");
-
             data.forEach((cat) => {
               const option = document.createElement("option");
               option.value = cat.id;
               option.textContent = cat.name;
-              select.appendChild(option);
+              categoryFilter.appendChild(option);
             });
           });
       }
 
-      function loadLeaderboard() {
-        const category = document.getElementById("category-filter").value;
+      // LOAD QUIZZES BASED ON CATEGORY
+      function loadQuizzes(categoryId) {
+        quizFilter.innerHTML = '<option value="">All Quizzes</option>';
 
-        let url = "/api/leaderboard/";
-        if (category) {
-          url += `?category=${category}`;
-        }
+        if (!categoryId) return;
+
+        fetch(`/api/categories/${categoryId}/quizzes/`)
+          .then((res) => res.json())
+          .then((data) => {
+            data.forEach((q) => {
+              const option = document.createElement("option");
+              option.value = q.id;
+              option.textContent = q.title;
+              quizFilter.appendChild(option);
+            });
+          });
+      }
+
+      // LOAD LEADERBOARD
+      function loadLeaderboard() {
+        const category = categoryFilter.value;
+        const quiz = quizFilter.value;
+
+        let url = "/api/leaderboard/?";
+
+        if (category) url += `category=${category}&`;
+        if (quiz) url += `quiz=${quiz}`;
 
         fetch(url)
           .then((res) => res.json())
@@ -74,7 +101,7 @@
 
             if (!data.length) {
               list.innerHTML =
-                '<div class="loading-state">No entries yet. Be the first!</div>';
+                '<div class="loading-state">No entries yet.</div>';
               return;
             }
 
@@ -86,7 +113,13 @@
               li.style.animationDelay = `${i * 0.05}s`;
 
               const medal =
-                rank === 1 ? "①" : rank === 2 ? "②" : rank === 3 ? "③" : rank;
+                rank === 1
+                  ? "🥇"
+                  : rank === 2
+                    ? "🥈"
+                    : rank === 3
+                      ? "🥉"
+                      : rank;
 
               const nameHtml =
                 rank === 1
@@ -94,17 +127,17 @@
                   : p.username;
 
               li.innerHTML = `
-            <div class="lb-rank">${medal}</div>
-            <div class="lb-name">
-                ${nameHtml}
-                <div class="lb-sub">
+                <div class="lb-rank">${medal}</div>
+                <div class="lb-name">
+                  ${nameHtml}
+                  <div class="lb-sub">
                     ${p.quiz_title} • ${p.feedback}
+                  </div>
                 </div>
-            </div>
-            <div class="lb-score">${p.score}/${p.total_questions}</div>
-            <div class="lb-pct">${Number(p.percentage).toFixed(0)}%</div>
-            <div class="lb-time">${p.time_taken ?? "—"}s</div>
-          `;
+                <div class="lb-score">${p.score}/${p.total_questions}</div>
+                <div class="lb-pct">${Number(p.percentage).toFixed(0)}%</div>
+                <div class="lb-time">${p.time_taken ?? "—"}s</div>
+              `;
 
               list.appendChild(li);
             });
@@ -115,7 +148,43 @@
           });
       }
 
-      // LOAD BOTH ON PAGE START
+      // EVENTS
+      categoryFilter.addEventListener("change", function () {
+        const categoryId = this.value;
+
+        const quizSelect = document.getElementById("quiz-filter");
+
+        // RESET DROPDOWN
+        quizSelect.innerHTML = '<option value="">All Quizzes</option>';
+
+        if (!categoryId) {
+          loadLeaderboard();
+          return;
+        }
+
+        fetch(`/api/categories/${categoryId}/quizzes/`)
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("QUIZZES LOADED:", data); // 🔥 DEBUG
+
+            data.forEach((q) => {
+              const option = document.createElement("option");
+              option.value = q.id;
+              option.textContent = q.title;
+              quizSelect.appendChild(option);
+            });
+
+            // FORCE REFRESH AFTER OPTIONS LOAD
+            loadLeaderboard();
+          })
+          .catch((err) => {
+            console.error("Quiz load error:", err);
+          });
+      });
+
+      quizFilter.addEventListener("change", loadLeaderboard);
+
+      // INIT
       document.addEventListener("DOMContentLoaded", () => {
         loadCategories();
         loadLeaderboard();

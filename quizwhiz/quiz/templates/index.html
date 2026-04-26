@@ -21,7 +21,6 @@
       id="app"
       data-authenticated="{{ request.user.is_authenticated|lower }}"
     >
-      <!-- NAV -->
       <div class="auth-buttons">
         {% if request.user.is_authenticated %}
         <span class="nav-link profile-btn" style="cursor: pointer">
@@ -35,14 +34,12 @@
         {% endif %}
       </div>
 
-      <!-- BRAND -->
       <div class="brand">
         <div class="brand-logo">QuizWhiz</div>
         <div class="brand-tag">v2.0</div>
       </div>
       <div class="brand-sub">Test your knowledge and climb the leaderboard</div>
 
-      <!-- HEADER -->
       <div class="section-header">
         <div class="section-label" id="section-label">
           {% if request.user.is_authenticated %} Select Category {% else %}
@@ -54,7 +51,15 @@
         {% endif %}
       </div>
 
-      <!-- LIST -->
+      {% if request.user.is_authenticated %}
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Search categories..."
+        class="lb-filter"
+      />
+      {% endif %}
+
       <ul id="item-list"></ul>
 
       <div id="loading" class="loading-state" style="display: none">
@@ -74,6 +79,11 @@
         const loading = document.getElementById("loading");
         const label = document.getElementById("section-label");
         const backLink = document.getElementById("back-link");
+        const searchInput = document.getElementById("search-input");
+
+        let allCategories = [];
+        let allQuizzes = [];
+        let isViewingQuizzes = false;
 
         function showLoading() {
           loading.style.display = "block";
@@ -84,99 +94,136 @@
           loading.style.display = "none";
         }
 
-        /* CATEGORY CARD */
+        function clearSearch() {
+          if (searchInput) searchInput.value = "";
+        }
+
         function makeCategoryCard(num, title, desc, categoryId) {
           const li = document.createElement("li");
           li.className = "category-card";
 
           li.innerHTML = `
-    <div class="card-inner">
+            <div class="card-inner">
+              <div class="card-front">
+                <div class="card-top">
+                  <span class="card-number">${String(num).padStart(2, "0")}</span>
+                  <span class="card-arrow">→</span>
+                </div>
 
-      <!-- FRONT -->
-      <div class="card-front">
-        <div class="card-top">
-          <span class="card-number">${String(num).padStart(2, "0")}</span>
-          <span class="card-arrow">→</span>
-        </div>
+                <div class="card-title">${title}</div>
+                <div class="card-desc">
+                  ${desc ? desc.slice(0, 80) + "..." : "No description."}
+                </div>
+              </div>
 
-        <div class="card-title">${title}</div>
-        <div class="card-desc">${desc ? desc.slice(0, 80) + "..." : "No description."}</div>
-      </div>
+              <div class="card-back">
+                <div class="card-title">${title}</div>
+                <div class="card-full">${desc || "No description."}</div>
 
-      <!-- BACK -->
-      <div class="card-back">
-        <div class="card-title">${title}</div>
-        <div class="card-full">${desc || "No description."}</div>
+                <button class="start-btn" data-id="${categoryId}">
+                  Start Quiz →
+                </button>
+              </div>
+            </div>
+          `;
 
-        <button class="start-btn" data-id="${categoryId}">Start Quiz →</button>
-      </div>
-
-    </div>
-  `;
-
-          // flip on click
           li.onclick = () => {
             li.classList.toggle("flipped");
           };
 
-          // button navigates 
           li.querySelector(".start-btn").onclick = function (e) {
             e.stopPropagation();
 
             const id = this.dataset.id;
 
-            // optional: button feedback
             this.innerText = "Loading...";
             this.disabled = true;
 
-            // trigger fade
             document.body.classList.add("fade-out");
 
-            // delay navigation slightly
             setTimeout(() => {
-                window.location.href = `/quiz/?id=${id}`;
+              window.location.href = `/quiz/?id=${id}`;
             }, 200);
-        };
+          };
 
           return li;
         }
 
-        /* QUIZ ITEM */
         function makeQuizItem(num, title, onClick) {
           const li = document.createElement("li");
           li.className = "quiz-item";
 
           li.innerHTML = `
-      <span class="quiz-num">${String(num).padStart(2, "0")}</span>
-      <span class="quiz-title">${title}</span>
-      <span class="quiz-arrow">→</span>
-    `;
+            <span class="quiz-num">${String(num).padStart(2, "0")}</span>
+            <span class="quiz-title">${title}</span>
+            <span class="quiz-arrow">→</span>
+          `;
 
           li.onclick = onClick;
           return li;
         }
 
+        function renderCategories(data) {
+          list.innerHTML = "";
+
+          if (!data.length) {
+            list.innerHTML =
+              '<div class="loading-state">No matching categories found.</div>';
+            return;
+          }
+
+          data.forEach((cat, i) => {
+            list.appendChild(
+              makeCategoryCard(i + 1, cat.name, cat.description, cat.id),
+            );
+          });
+        }
+
+        function renderQuizzes(data) {
+          list.innerHTML = "";
+
+          if (!data.length) {
+            list.innerHTML =
+              '<div class="loading-state">No matching quizzes found.</div>';
+            return;
+          }
+
+          data.forEach((q, i) => {
+            list.appendChild(
+              makeQuizItem(i + 1, q.title, () => {
+                window.location.href = `/quiz/?id=${q.id}`;
+              }),
+            );
+          });
+        }
+
         function loadCategories() {
           label.textContent = "Select Category";
           backLink.style.display = "none";
+          isViewingQuizzes = false;
+          allQuizzes = [];
+          clearSearch();
           showLoading();
 
           fetch("/api/categories/")
             .then((res) => res.json())
             .then((data) => {
               hideLoading();
-
-              data.forEach((cat, i) => {
-                list.appendChild(
-                  makeCategoryCard(i + 1, cat.name, cat.description, cat.id),
-                );
-              });
+              allCategories = data;
+              renderCategories(data);
+            })
+            .catch(() => {
+              hideLoading();
+              list.innerHTML =
+                '<div class="loading-state">Failed to load categories.</div>';
             });
         }
 
         function loadQuizzes(categoryId, categoryName) {
           label.textContent = "Select Quiz: " + categoryName;
           backLink.style.display = "inline";
+          isViewingQuizzes = true;
+          clearSearch();
 
           backLink.onclick = () => {
             loadCategories();
@@ -189,22 +236,38 @@
             .then((res) => res.json())
             .then((data) => {
               hideLoading();
-
-              data.forEach((q, i) => {
-                list.appendChild(
-                  makeQuizItem(i + 1, q.title, () => {
-                    window.location.href = `/quiz/?id=${q.id}`;
-                  }),
-                );
-              });
+              allQuizzes = data;
+              renderQuizzes(data);
+            })
+            .catch(() => {
+              hideLoading();
+              list.innerHTML =
+                '<div class="loading-state">Failed to load quizzes.</div>';
             });
+        }
+
+        if (searchInput) {
+          searchInput.addEventListener("input", function () {
+            const search = this.value.toLowerCase().trim();
+
+            //
+            const filtered = allCategories.filter((cat) =>
+              cat.name.toLowerCase().includes(search),
+            );
+
+            renderCategories(filtered);
+
+            isViewingQuizzes = false;
+          });
         }
 
         if (isAuth) {
           loadCategories();
+        } else {
+          list.innerHTML =
+            '<div class="loading-state">Please login to start quizzes.</div>';
         }
 
-        /* PROFILE CLICK */
         const profileBtn = document.querySelector(".profile-btn");
         if (profileBtn) {
           profileBtn.onclick = () => {
