@@ -98,9 +98,7 @@
           if (searchInput) searchInput.value = "";
         }
 
-        /* =========================
-     CATEGORY CARD
-     ========================= */
+        /* CATEGORY CARD*/
         function makeCategoryCard(num, title, desc, categoryId) {
           const li = document.createElement("li");
           li.className = "category-card";
@@ -130,12 +128,11 @@
       </div>
     `;
 
-          // flip effect
+          // flip effect sya sa card
           li.onclick = () => {
             li.classList.toggle("flipped");
           };
 
-          // 🔥 FIXED FLOW: go to quiz list, not quiz directly
           li.querySelector(".start-btn").onclick = function (e) {
             e.stopPropagation();
 
@@ -154,9 +151,7 @@
           return li;
         }
 
-        /* =========================
-     QUIZ ITEM (RECTANGLE LIST)
-     ========================= */
+        /* QUIZ ITEM (naka rectangle)*/
         function makeQuizItem(num, title, id) {
           const li = document.createElement("li");
           li.className = "quiz-item";
@@ -174,9 +169,7 @@
           return li;
         }
 
-        /* =========================
-     RENDER
-     ========================= */
+
         function renderCategories(data) {
           list.innerHTML = "";
 
@@ -204,14 +197,12 @@
 
           data.forEach((q, i) => {
             list.appendChild(
-              makeQuizItem(i + 1, q.title, q.id), // ✅ FIXED
+              makeQuizItem(i + 1, q.title, q.id), 
             );
           });
         }
 
-        /* =========================
-     LOAD DATA
-     ========================= */
+  
         function loadCategories() {
           label.textContent = "Select Category";
           backLink.style.display = "none";
@@ -282,7 +273,7 @@
             isViewingQuizzes = false;
           });
         }
-        
+
         if (isAuth) {
           loadCategories();
         } else {

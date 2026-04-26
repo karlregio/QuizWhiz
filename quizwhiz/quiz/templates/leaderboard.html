@@ -24,7 +24,6 @@
         <div class="page-sub">Top performers across all quizzes</div>
       </div>
 
-      <!-- FILTERS -->
       <select id="category-filter" class="lb-filter">
         <option value="">All Categories</option>
       </select>
@@ -33,7 +32,6 @@
         <option value="">All Quizzes</option>
       </select>
 
-      <!-- TABLE -->
       <div class="lb-table-header">
         <span style="text-align: center">#</span>
         <span>Player</span>
@@ -174,7 +172,7 @@
               quizSelect.appendChild(option);
             });
 
-            // FORCE REFRESH AFTER OPTIONS LOAD
+            // FORCE REFRESH AFTER LOAD
             loadLeaderboard();
           })
           .catch((err) => {
@@ -183,8 +181,7 @@
       });
 
       quizFilter.addEventListener("change", loadLeaderboard);
-
-      // INIT
+      
       document.addEventListener("DOMContentLoaded", () => {
         loadCategories();
         loadLeaderboard();

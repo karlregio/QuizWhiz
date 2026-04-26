@@ -17,16 +17,13 @@
 
   <body>
     <div class="container">
-      <!-- BACK -->
       <a class="back-link" href="/">← Back</a>
 
-      <!-- HEADER -->
       <div class="page-header">
         <div class="page-title" id="username">Loading...</div>
         <div class="page-sub">Your performance overview</div>
       </div>
 
-      <!-- STATS -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">Quizzes Taken</div>
@@ -69,7 +66,6 @@
       fetch("/api/profile/")
         .then((res) => res.json())
         .then((data) => {
-          // ===== SAFE VALUES =====
           const avg = data.avg_score || 0;
           const best = data.best_score || 0;
 
@@ -132,7 +128,7 @@
     </script>
 
     <style>
-      /* SMALL ADDITIONS */
+      /* small addition lang po sa css */
       .badge {
         font-size: 12px;
         margin-left: 10px;

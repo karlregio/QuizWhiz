@@ -37,7 +37,7 @@ def history_view(request):
 
 # ---------- API VIEWS ----------
 
-# PUBLIC - view quizzes
+# - view quizzes
 @api_view(['GET'])
 def quiz_detail(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
@@ -65,6 +65,7 @@ def quiz_detail(request, pk):
         "title": quiz.title,
         "questions": question_data
     })
+    
 @api_view(['GET'])
 def result_detail(request, pk):
     result = get_object_or_404(Result, pk=pk)
@@ -138,7 +139,7 @@ def delete_quiz(request, pk):
     return Response({'message': 'Deleted'}, status=204)
 
 
-# PUBLIC - submit quiz
+# - submit quiz
 @api_view(['POST'])
 def submit_quiz(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
@@ -154,7 +155,7 @@ def submit_quiz(request, pk):
     score = 0
     total = quiz.questions.count()
 
-    # NEW: collect answer review
+    # collect answer review
     answers_review = []
 
     for ans in answers:
@@ -183,7 +184,7 @@ def submit_quiz(request, pk):
     # Compute percentage
     percentage = (score / total) * 100 if total > 0 else 0
 
-    # 💬 Feedback logic
+    # Feedback logic
     if percentage == 100:
         feedback = "Perfect score!"
     elif percentage >= 85:
@@ -207,14 +208,13 @@ def submit_quiz(request, pk):
 
     serializer = ResultSerializer(result)
 
-    # FINAL RESPONSE (WITH REVIEW)
     return Response({
         **serializer.data,
         "answers_review": answers_review
     })
 
 
-# PUBLIC - leaderboard
+# - leaderboard
 @api_view(['GET'])
 def leaderboard_api(request):
     category_id = request.GET.get('category')
@@ -229,7 +229,7 @@ def leaderboard_api(request):
     if quiz_id:
         results = results.filter(quiz_id=quiz_id)
 
-    # 🔥 BEST SCORE PER USER PER QUIZ (SQLite safe)
+    # BEST SCORE PER USER PER QUIZ 
     best_map = {}
 
     for r in results:
@@ -249,7 +249,6 @@ def leaderboard_api(request):
 
     best_results = list(best_map.values())
 
-    # FINAL SORT
     best_results.sort(key=lambda r: (-r.score, -r.percentage, r.time_taken))
 
     data = [
@@ -268,7 +267,7 @@ def leaderboard_api(request):
     return Response(data)
 
 
-# PUBLIC - list categories
+# - list categories
 @api_view(['GET'])
 def category_list(request):
     categories = Category.objects.all()
@@ -287,7 +286,7 @@ def category_list(request):
 def category_page(request):
     return render(request, 'category.html')
 
-# PUBLIC - category detail
+# - category detail
 @api_view(['GET'])
 def category_detail(request, pk):
     category = get_object_or_404(Category, pk=pk)

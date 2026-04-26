@@ -27,7 +27,7 @@
 
       <div class="section-label" id="section-label">Select Topic</div>
 
-      <ul id="quiz-list"></ul>
+      <ul id="quiz-list" class="quiz-page"></ul>
     </div>
 
     <script>
@@ -70,20 +70,28 @@
               }
 
               li.innerHTML = `
+  <div class="quiz-left">
     <span class="quiz-num">${String(i + 1).padStart(2, "0")}</span>
-    <span class="quiz-title">${q.title}</span>
-    <span class="quiz-arrow">
-      ${
-        q.locked
-          ? q.difficulty === "medium"
-            ? "🔒 Complete Easy first"
-            : "🔒 Complete Medium or reach 80%"
-          : "→"
-      }
-    </span>
-  `;
 
-              // ✅ HANDLE CLICK
+    <div class="quiz-text">
+      <span class="quiz-title">${q.title}</span>
+      <span class="quiz-difficulty ${q.difficulty}">
+        ${q.difficulty.toUpperCase()}
+      </span>
+    </div>
+  </div>
+
+  <span class="quiz-arrow">
+    ${
+      q.locked
+        ? q.difficulty === "medium"
+          ? "🔒 Complete Easy first"
+          : "🔒 Complete Medium or reach 80%"
+        : "→"
+    }
+  </span>
+`;
+              // HANDLE CLICK
               li.addEventListener("click", function () {
                 if (q.locked) {
                   // 👉 feedback when locked
@@ -93,10 +101,10 @@
                     li.classList.remove("shake");
                   }, 300);
 
-                  return; // ❌ stop navigation
+                  return; // stop navigation
                 }
 
-                // ✅ normal navigation
+                // normal navigation
                 const page = document.getElementById("page");
 
                 if (page) {

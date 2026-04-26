@@ -27,7 +27,7 @@ class ResultAdmin(admin.ModelAdmin):
         'score',
         'total_questions',
         'percentage',
-        'taken_at'   # ✅ KEPT (you were right)
+        'taken_at' 
     )
     list_filter = ('quiz',)
     search_fields = ('username', 'quiz__title')
@@ -38,7 +38,7 @@ class ResultAdmin(admin.ModelAdmin):
         'total_questions',
         'percentage',
         'feedback',
-        'taken_at'   # ✅ KEPT
+        'taken_at'  
     )
 
 

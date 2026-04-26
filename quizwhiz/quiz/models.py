@@ -8,7 +8,6 @@ class Category(models.Model):
         return self.name
 
 
-
 class Quiz(models.Model):
     title = models.CharField(max_length=200)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='quizzes')
