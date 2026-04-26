@@ -1,4 +1,4 @@
-from django import views
+from .import views
 from django.urls import path
 from .views import *
 
@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/categories/', category_list),
     path('api/categories/<int:pk>/', category_detail),
     path('api/categories/<int:pk>/quizzes/', category_quizzes),
+    path('category/', views.category_page, name='category_page'),
 
 
     # ---------- ADMIN API ----------

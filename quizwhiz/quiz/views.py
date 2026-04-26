@@ -6,7 +6,7 @@ import random
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
-from django.db.models import OuterRef, Subquery
+
 
 from .models import Category, Quiz, Result
 from .serializers import (
@@ -284,6 +284,8 @@ def category_list(request):
 
     return Response(data)
 
+def category_page(request):
+    return render(request, 'category.html')
 
 # PUBLIC - category detail
 @api_view(['GET'])
@@ -292,15 +294,64 @@ def category_detail(request, pk):
     serializer = CategorySerializer(category)
     return Response(serializer.data)
 
+def get_global_average(user):
+    results = Result.objects.filter(username=user.username)
 
-# PUBLIC - quizzes by category
+    if not results.exists():
+        return 0
+
+    return sum(r.percentage for r in results) / len(results)
+
+
 @api_view(['GET'])
 def category_quizzes(request, pk):
-    category = get_object_or_404(Category, pk=pk)
-    quizzes = category.quizzes.all()
+    user = request.user
 
-    serializer = QuizListSerializer(quizzes, many=True)
-    return Response(serializer.data)
+    quizzes = Quiz.objects.filter(category_id=pk)
+
+    user_results = Result.objects.filter(
+        username=user.username,
+        quiz__category_id=pk
+    )
+
+    attempted_quiz_ids = set(user_results.values_list('quiz_id', flat=True))
+
+    global_avg = get_global_average(user)
+
+    data = []
+
+    for q in quizzes:
+        is_locked = False
+
+        if q.difficulty == 'easy':
+            is_locked = False
+
+        elif q.difficulty == 'medium':
+            easy_attempted = Quiz.objects.filter(
+                category_id=pk,
+                difficulty='easy',
+                id__in=attempted_quiz_ids
+            ).exists()
+
+            is_locked = not easy_attempted
+
+        elif q.difficulty == 'hard':
+            medium_attempted = Quiz.objects.filter(
+                category_id=pk,
+                difficulty='medium',
+                id__in=attempted_quiz_ids
+            ).exists()
+
+            is_locked = not (medium_attempted or global_avg >= 80)
+
+        data.append({
+            "id": q.id,
+            "title": q.title,
+            "difficulty": q.difficulty,
+            "locked": is_locked
+        })
+
+    return Response(data)
 
 @api_view(['GET'])
 def user_history(request):

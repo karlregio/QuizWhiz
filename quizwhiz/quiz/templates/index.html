@@ -98,39 +98,44 @@
           if (searchInput) searchInput.value = "";
         }
 
+        /* =========================
+     CATEGORY CARD
+     ========================= */
         function makeCategoryCard(num, title, desc, categoryId) {
           const li = document.createElement("li");
           li.className = "category-card";
 
           li.innerHTML = `
-            <div class="card-inner">
-              <div class="card-front">
-                <div class="card-top">
-                  <span class="card-number">${String(num).padStart(2, "0")}</span>
-                  <span class="card-arrow">→</span>
-                </div>
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="card-top">
+            <span class="card-number">${String(num).padStart(2, "0")}</span>
+            <span class="card-arrow">→</span>
+          </div>
 
-                <div class="card-title">${title}</div>
-                <div class="card-desc">
-                  ${desc ? desc.slice(0, 80) + "..." : "No description."}
-                </div>
-              </div>
+          <div class="card-title">${title}</div>
+          <div class="card-desc">
+            ${desc ? desc.slice(0, 80) + "..." : "No description."}
+          </div>
+        </div>
 
-              <div class="card-back">
-                <div class="card-title">${title}</div>
-                <div class="card-full">${desc || "No description."}</div>
+        <div class="card-back">
+          <div class="card-title">${title}</div>
+          <div class="card-full">${desc || "No description."}</div>
 
-                <button class="start-btn" data-id="${categoryId}">
-                  Start Quiz →
-                </button>
-              </div>
-            </div>
-          `;
+          <button class="start-btn" data-id="${categoryId}">
+            Start Quiz →
+          </button>
+        </div>
+      </div>
+    `;
 
+          // flip effect
           li.onclick = () => {
             li.classList.toggle("flipped");
           };
 
+          // 🔥 FIXED FLOW: go to quiz list, not quiz directly
           li.querySelector(".start-btn").onclick = function (e) {
             e.stopPropagation();
 
@@ -142,27 +147,36 @@
             document.body.classList.add("fade-out");
 
             setTimeout(() => {
-              window.location.href = `/quiz/?id=${id}`;
+              window.location.href = `/category/?id=${id}`;
             }, 200);
           };
 
           return li;
         }
 
-        function makeQuizItem(num, title, onClick) {
+        /* =========================
+     QUIZ ITEM (RECTANGLE LIST)
+     ========================= */
+        function makeQuizItem(num, title, id) {
           const li = document.createElement("li");
           li.className = "quiz-item";
 
           li.innerHTML = `
-            <span class="quiz-num">${String(num).padStart(2, "0")}</span>
-            <span class="quiz-title">${title}</span>
-            <span class="quiz-arrow">→</span>
-          `;
+      <span class="quiz-num">${String(num).padStart(2, "0")}</span>
+      <span class="quiz-title">${title}</span>
+      <span class="quiz-arrow">→</span>
+    `;
 
-          li.onclick = onClick;
+          li.onclick = () => {
+            window.location.href = `/quiz/?id=${id}`;
+          };
+
           return li;
         }
 
+        /* =========================
+     RENDER
+     ========================= */
         function renderCategories(data) {
           list.innerHTML = "";
 
@@ -184,25 +198,27 @@
 
           if (!data.length) {
             list.innerHTML =
-              '<div class="loading-state">No matching quizzes found.</div>';
+              '<div class="loading-state">No quizzes found.</div>';
             return;
           }
 
           data.forEach((q, i) => {
             list.appendChild(
-              makeQuizItem(i + 1, q.title, () => {
-                window.location.href = `/quiz/?id=${q.id}`;
-              }),
+              makeQuizItem(i + 1, q.title, q.id), // ✅ FIXED
             );
           });
         }
 
+        /* =========================
+     LOAD DATA
+     ========================= */
         function loadCategories() {
           label.textContent = "Select Category";
           backLink.style.display = "none";
           isViewingQuizzes = false;
           allQuizzes = [];
           clearSearch();
+
           showLoading();
 
           fetch("/api/categories/")
@@ -246,21 +262,27 @@
             });
         }
 
+        /* =========================
+     SEARCH (CATEGORY ONLY)
+     ========================= */
         if (searchInput) {
           searchInput.addEventListener("input", function () {
             const search = this.value.toLowerCase().trim();
 
-            //
+            if (!search) {
+              renderCategories(allCategories);
+              return;
+            }
+
             const filtered = allCategories.filter((cat) =>
               cat.name.toLowerCase().includes(search),
             );
 
             renderCategories(filtered);
-
             isViewingQuizzes = false;
           });
         }
-
+        
         if (isAuth) {
           loadCategories();
         } else {

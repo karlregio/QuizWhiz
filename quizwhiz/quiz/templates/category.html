@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Select Topic — QuizWhiz</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  </head>
+
+  <body>
+    <div class="container page-transition" id="page">
+      <a href="/" class="back-link">← Back</a>
+
+      <div class="brand">
+        <div class="brand-logo">QuizWhiz</div>
+        <div class="brand-tag">v2.0</div>
+      </div>
+
+      <div class="section-label" id="section-label">Select Topic</div>
+
+      <ul id="quiz-list"></ul>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const params = new URLSearchParams(window.location.search);
+        const categoryId = params.get("id");
+
+        const list = document.getElementById("quiz-list");
+        const label = document.getElementById("section-label");
+
+        if (!categoryId) {
+          list.innerHTML = '<div class="loading-state">Invalid category.</div>';
+          return;
+        }
+
+        const url = `/api/categories/${categoryId}/quizzes/`;
+
+        fetch(url)
+          .then((res) => {
+            if (!res.ok) throw new Error("Network error");
+            return res.json();
+          })
+          .then((data) => {
+            list.innerHTML = "";
+
+            if (!data.length) {
+              list.innerHTML =
+                '<div class="loading-state">No quizzes found.</div>';
+              return;
+            }
+
+            label.textContent = "SELECT TOPIC";
+
+            data.forEach((q, i) => {
+              const li = document.createElement("li");
+              li.className = "quiz-item";
+
+              if (q.locked) {
+                li.classList.add("locked");
+              }
+
+              li.innerHTML = `
+    <span class="quiz-num">${String(i + 1).padStart(2, "0")}</span>
+    <span class="quiz-title">${q.title}</span>
+    <span class="quiz-arrow">
+      ${
+        q.locked
+          ? q.difficulty === "medium"
+            ? "🔒 Complete Easy first"
+            : "🔒 Complete Medium or reach 80%"
+          : "→"
+      }
+    </span>
+  `;
+
+              // ✅ HANDLE CLICK
+              li.addEventListener("click", function () {
+                if (q.locked) {
+                  // 👉 feedback when locked
+                  li.classList.add("shake");
+
+                  setTimeout(() => {
+                    li.classList.remove("shake");
+                  }, 300);
+
+                  return; // ❌ stop navigation
+                }
+
+                // ✅ normal navigation
+                const page = document.getElementById("page");
+
+                if (page) {
+                  page.classList.add("fade-out");
+
+                  setTimeout(() => {
+                    window.location.href = `/quiz/?id=${q.id}`;
+                  }, 300);
+                }
+              });
+
+              list.appendChild(li);
+            });
+          })
+          .catch((err) => {
+            console.error("FETCH ERROR:", err);
+            list.innerHTML =
+              '<div class="loading-state">Error loading quizzes.</div>';
+          });
+      });
+    </script>
+  </body>
+</html>
