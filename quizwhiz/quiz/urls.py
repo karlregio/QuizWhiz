@@ -35,8 +35,8 @@ urlpatterns = [
 
 
     # ---------- ADMIN API ----------
-    path('api/quizzes/create/', create_quiz),              # POST
-    path('api/quizzes/<int:pk>/update/', update_quiz),     # PUT
-    path('api/quizzes/<int:pk>/delete/', delete_quiz),     # DELETE
+    path('api/quizzes/create/', create_quiz),            
+    path('api/quizzes/<int:pk>/update/', update_quiz),      
+    path('api/quizzes/<int:pk>/delete/', delete_quiz),     
     
 ]

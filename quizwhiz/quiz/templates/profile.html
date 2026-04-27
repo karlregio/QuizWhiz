@@ -46,7 +46,7 @@
         </div>
       </div>
 
-      <!-- PROGRESS -->
+      
       <div class="progress-section">
         <div class="progress-label">
           Performance — <span id="progress-text">0%</span>
@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <!-- RECENT -->
+      
       <div class="section-label">Recent Activity</div>
       <ul id="recent-list" class="history-list"></ul>
     </div>
@@ -69,7 +69,7 @@
           const avg = data.avg_score || 0;
           const best = data.best_score || 0;
 
-          // ===== PERFORMANCE LABEL =====
+          // ===== PERFORMANCE NG USER =====
           let level = "Beginner";
           if (avg >= 80) level = "Expert";
           else if (avg >= 60) level = "Intermediate";

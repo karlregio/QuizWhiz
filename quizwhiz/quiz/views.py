@@ -49,7 +49,7 @@ def quiz_detail(request, pk):
 
     for q in questions:
         choices = list(q.choices.all())
-        random.shuffle(choices)  # ✅ shuffle choices
+        random.shuffle(choices)  # shuffle choices
 
         question_data.append({
             "id": q.id,
@@ -364,17 +364,17 @@ def user_history(request):
     if search:
         results = results.filter(quiz__title__icontains=search)
 
-    # FILTER BY MIN PERCENTAGE
+    # FILTER SA MIN PERCENTAGE
     min_pct = request.GET.get('min_pct')
     if min_pct:
         results = results.filter(percentage__gte=min_pct)
 
-    # FILTER BY MAX PERCENTAGE
+    # FILTER SA MAX PERCENTAGE
     max_pct = request.GET.get('max_pct')
     if max_pct:
         results = results.filter(percentage__lte=max_pct)
 
-    # SORT (latest first)
+    # SORT 
     results = results.order_by('-taken_at')
 
     serializer = ResultSerializer(results, many=True)
