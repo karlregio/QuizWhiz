@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
 
 
-from .models import Category, Quiz, Result
+from .models import Category, Quiz, Question, Choice, Result
 from .serializers import (
     QuizListSerializer,
     ResultSerializer,
@@ -35,7 +35,252 @@ def history_view(request):
     return render(request, 'history.html')
 
 
-# ---------- API VIEWS ----------
+# ---------- CATEGORY CRUD ----------
+
+@api_view(['GET'])
+def category_list(request):
+    """READ - List all categories"""
+    categories = Category.objects.all()
+    data = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "description": c.description
+        }
+        for c in categories
+    ]
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_category(request):
+    """CREATE - Create a new category"""
+    data = request.data
+    category = Category.objects.create(
+        name=data.get("name"),
+        description=data.get("description", "")
+    )
+    return Response({
+        "id": category.id,
+        "name": category.name,
+        "description": category.description
+    }, status=201)
+
+
+@api_view(['GET'])
+def category_detail(request, pk):
+    """READ - Get single category"""
+    category = get_object_or_404(Category, pk=pk)
+    serializer = CategorySerializer(category)
+    return Response(serializer.data)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def update_category(request, pk):
+    """UPDATE - Update a category"""
+    category = get_object_or_404(Category, pk=pk)
+    data = request.data
+    
+    category.name = data.get("name", category.name)
+    category.description = data.get("description", category.description)
+    category.save()
+    
+    return Response({
+        "id": category.id,
+        "name": category.name,
+        "description": category.description
+    })
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_category(request, pk):
+    """DELETE - Delete a category"""
+    category = get_object_or_404(Category, pk=pk)
+    category.delete()
+    return Response({'message': 'Category deleted'}, status=204)
+
+
+# ---------- QUESTION CRUD ----------
+
+@api_view(['GET'])
+def question_list(request):
+    """READ - List all questions (optional quiz_id filter)"""
+    quiz_id = request.GET.get('quiz_id')
+    if quiz_id:
+        questions = Question.objects.filter(quiz_id=quiz_id)
+    else:
+        questions = Question.objects.all()
+    
+    data = [
+        {
+            "id": q.id,
+            "quiz_id": q.quiz_id,
+            "text": q.text,
+            "choices_count": q.choices.count()
+        }
+        for q in questions
+    ]
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_question(request):
+    """CREATE - Create a new question"""
+    data = request.data
+    quiz = get_object_or_404(Quiz, pk=data.get("quiz_id"))
+    
+    question = Question.objects.create(
+        quiz=quiz,
+        text=data.get("text")
+    )
+    
+    return Response({
+        "id": question.id,
+        "quiz_id": question.quiz_id,
+        "text": question.text
+    }, status=201)
+
+
+@api_view(['GET'])
+def question_detail(request, pk):
+    """READ - Get single question with choices"""
+    question = get_object_or_404(Question, pk=pk)
+    
+    choices = question.choices.all()
+    
+    return Response({
+        "id": question.id,
+        "quiz_id": question.quiz_id,
+        "text": question.text,
+        "choices": [
+            {
+                "id": c.id,
+                "text": c.text,
+                "is_correct": c.is_correct
+            }
+            for c in choices
+        ]
+    })
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def update_question(request, pk):
+    """UPDATE - Update a question"""
+    question = get_object_or_404(Question, pk=pk)
+    data = request.data
+    
+    question.text = data.get("text", question.text)
+    
+    # Optionally update quiz
+    if data.get("quiz_id"):
+        question.quiz_id = data.get("quiz_id")
+    
+    question.save()
+    
+    return Response({
+        "id": question.id,
+        "quiz_id": question.quiz_id,
+        "text": question.text
+    })
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_question(request, pk):
+    """DELETE - Delete a question"""
+    question = get_object_or_404(Question, pk=pk)
+    question.delete()
+    return Response({'message': 'Question deleted'}, status=204)
+
+
+# ---------- CHOICE CRUD ----------
+
+@api_view(['GET'])
+def choice_list(request):
+    """READ - List all choices (optional question_id filter)"""
+    question_id = request.GET.get('question_id')
+    if question_id:
+        choices = Choice.objects.filter(question_id=question_id)
+    else:
+        choices = Choice.objects.all()
+    
+    data = [
+        {
+            "id": c.id,
+            "question_id": c.question_id,
+            "text": c.text,
+            "is_correct": c.is_correct
+        }
+        for c in choices
+    ]
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_choice(request):
+    """CREATE - Create a new choice"""
+    data = request.data
+    question = get_object_or_404(Question, pk=data.get("question_id"))
+    
+    choice = Choice.objects.create(
+        question=question,
+        text=data.get("text"),
+        is_correct=data.get("is_correct", False)
+    )
+    
+    return Response({
+        "id": choice.id,
+        "question_id": choice.question_id,
+        "text": choice.text,
+        "is_correct": choice.is_correct
+    }, status=201)
+
+
+@api_view(['GET'])
+def choice_detail(request, pk):
+    """READ - Get single choice"""
+    choice = get_object_or_404(Choice, pk=pk)
+    return Response({
+        "id": choice.id,
+        "question_id": choice.question_id,
+        "text": choice.text,
+        "is_correct": choice.is_correct
+    })
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def update_choice(request, pk):
+    """UPDATE - Update a choice"""
+    choice = get_object_or_404(Choice, pk=pk)
+    data = request.data
+    
+    choice.text = data.get("text", choice.text)
+    choice.is_correct = data.get("is_correct", choice.is_correct)
+    choice.save()
+    
+    return Response({
+        "id": choice.id,
+        "question_id": choice.question_id,
+        "text": choice.text,
+        "is_correct": choice.is_correct
+    })
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_choice(request, pk):
+    """DELETE - Delete a choice"""
+    choice = get_object_or_404(Choice, pk=pk)
+    choice.delete()
+    return Response({'message': 'Choice deleted'}, status=204)
+
 
 # - view quizzes
 @api_view(['GET'])
@@ -49,8 +294,7 @@ def quiz_detail(request, pk):
 
     for q in questions:
         choices = list(q.choices.all())
-        random.shuffle(choices)  # shuffle choices
-
+        random.shuffle(choices)  # 
         question_data.append({
             "id": q.id,
             "text": q.text,
@@ -267,31 +511,11 @@ def leaderboard_api(request):
     return Response(data)
 
 
-# - list categories
-@api_view(['GET'])
-def category_list(request):
-    categories = Category.objects.all()
-
-    data = [
-        {
-            "id": c.id,
-            "name": c.name,
-            "description": c.description
-        }
-        for c in categories
-    ]
-
-    return Response(data)
-
 def category_page(request):
     return render(request, 'category.html')
 
-# - category detail
+
 @api_view(['GET'])
-def category_detail(request, pk):
-    category = get_object_or_404(Category, pk=pk)
-    serializer = CategorySerializer(category)
-    return Response(serializer.data)
 
 def get_global_average(user):
     results = Result.objects.filter(username=user.username)
@@ -304,18 +528,15 @@ def get_global_average(user):
 
 @api_view(['GET'])
 def category_quizzes(request, pk):
+
     user = request.user
-
     quizzes = Quiz.objects.filter(category_id=pk)
-
     user_results = Result.objects.filter(
         username=user.username,
         quiz__category_id=pk
     )
-
     attempted_quiz_ids = set(user_results.values_list('quiz_id', flat=True))
-
-    global_avg = get_global_average(user)
+    global_avg = get_global_average(user.username)
 
     data = []
 
@@ -364,17 +585,17 @@ def user_history(request):
     if search:
         results = results.filter(quiz__title__icontains=search)
 
-    # FILTER SA MIN PERCENTAGE
+    # FILTER BY MIN PERCENTAGE
     min_pct = request.GET.get('min_pct')
     if min_pct:
         results = results.filter(percentage__gte=min_pct)
 
-    # FILTER SA MAX PERCENTAGE
+    # FILTER BY MAX PERCENTAGE
     max_pct = request.GET.get('max_pct')
     if max_pct:
         results = results.filter(percentage__lte=max_pct)
 
-    # SORT 
+    # SORT (latest first)
     results = results.order_by('-taken_at')
 
     serializer = ResultSerializer(results, many=True)
@@ -459,3 +680,18 @@ def profile_api(request):
             } for r in recent
         ]
     })
+
+
+@api_view(['GET'])
+def quiz_list(request):
+    quizzes = Quiz.objects.all()
+    data = [
+        {
+            "id": q.id,
+            "title": q.title,
+            "category": q.category.name,
+            "difficulty": q.difficulty
+        }
+        for q in quizzes
+    ]
+    return Response(data)

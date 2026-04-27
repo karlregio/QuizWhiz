@@ -17,11 +17,13 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class QuizListSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+    difficulty = serializers.ChoiceField(choices=Quiz.DIFFICULTY_CHOICES)
     category_name = serializers.CharField(source='category.name', read_only=True)
 
     class Meta:
         model = Quiz
-        fields = ['id', 'title', 'category_name']
+        fields = ['id', 'title', 'category', 'category_name', 'difficulty']
 
 
 class QuizDetailSerializer(serializers.ModelSerializer):
