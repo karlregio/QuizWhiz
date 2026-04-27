@@ -294,7 +294,12 @@ def quiz_detail(request, pk):
 
     for q in questions:
         choices = list(q.choices.all())
+        
+        random.shuffle(choices)  # shuffle choices
+
+
         random.shuffle(choices)  # 
+
         question_data.append({
             "id": q.id,
             "text": q.text,
@@ -359,6 +364,7 @@ def create_quiz(request):
         serializer.save()
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
+
 
 
 # ADMIN ONLY - update quiz
@@ -515,10 +521,9 @@ def category_page(request):
     return render(request, 'category.html')
 
 
-@api_view(['GET'])
 
 def get_global_average(user):
-    results = Result.objects.filter(username=user.username)
+    results = Result.objects.filter(username=user)
 
     if not results.exists():
         return 0
@@ -585,17 +590,17 @@ def user_history(request):
     if search:
         results = results.filter(quiz__title__icontains=search)
 
-    # FILTER BY MIN PERCENTAGE
+    # FILTER SA MIN PERCENTAGE
     min_pct = request.GET.get('min_pct')
     if min_pct:
         results = results.filter(percentage__gte=min_pct)
 
-    # FILTER BY MAX PERCENTAGE
+    # FILTER SA MAX PERCENTAGE
     max_pct = request.GET.get('max_pct')
     if max_pct:
         results = results.filter(percentage__lte=max_pct)
 
-    # SORT (latest first)
+    # SORT 
     results = results.order_by('-taken_at')
 
     serializer = ResultSerializer(results, many=True)
@@ -695,3 +700,36 @@ def quiz_list(request):
         for q in quizzes
     ]
     return Response(data)
+
+
+# ---------- RESULT CRUD ----------
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def result_list(request):
+    """READ - List all results (admin only)"""
+    results = Result.objects.select_related('quiz').order_by('-taken_at')
+    data = [
+        {
+            "id": r.id,
+            "username": r.username,
+            "quiz_title": r.quiz.title,
+            "score": r.score,
+            "total_questions": r.total_questions,
+            "percentage": r.percentage,
+            "feedback": r.feedback,
+            "taken_at": r.taken_at.isoformat(),
+            "time_taken": r.time_taken
+        }
+        for r in results
+    ]
+    return Response(data)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_result(request, pk):
+    """DELETE - Delete a result"""
+    result = get_object_or_404(Result, pk=pk)
+    result.delete()
+    return Response({'message': 'Result deleted'}, status=204)
