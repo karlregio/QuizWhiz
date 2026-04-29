@@ -16,6 +16,49 @@ from .serializers import (
 )
 
 
+# ---------- GET ALL DATA ENDPOINT ----------
+@api_view(['GET'])
+def get_all_data(request):
+    
+    # Get all categories, with nested quizzes, questions, and choices
+    categories = Category.objects.all()
+    data = []
+    for category in categories:
+        quizzes = Quiz.objects.filter(category=category)
+        quizzes_data = []
+        for quiz in quizzes:
+            questions = Question.objects.filter(quiz=quiz)
+            questions_data = []
+            for question in questions:
+                choices = question.choices.all()
+                choices_data = [
+                    {
+                        "id": choice.id,
+                        "text": choice.text,
+                        "is_correct": choice.is_correct
+                    }
+                    for choice in choices
+                ]
+                questions_data.append({
+                    "id": question.id,
+                    "text": question.text,
+                    "choices": choices_data
+                })
+            quizzes_data.append({
+                "id": quiz.id,
+                "title": quiz.title,
+                "difficulty": getattr(quiz, 'difficulty', None),
+                "questions": questions_data
+            })
+        data.append({
+            "id": category.id,
+            "name": category.name,
+            "description": category.description,
+            "quizzes": quizzes_data
+        })
+    return Response(data)
+
+
 def index_view(request):
     return render(request, 'index.html')
 
@@ -729,7 +772,6 @@ def result_list(request):
 @api_view(['DELETE'])
 @permission_classes([IsAdminUser])
 def delete_result(request, pk):
-    """DELETE - Delete a result"""
     result = get_object_or_404(Result, pk=pk)
     result.delete()
-    return Response({'message': 'Result deleted'}, status=204)
+    return Response({'message': 'Result deleted'}, status=200)

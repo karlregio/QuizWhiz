@@ -27,6 +27,9 @@ urlpatterns = [
     path('profile/', profile_view),
     path('api/profile/', profile_api),
 
+    # ---------- GET ALL DATA ----------
+    path('api/all/', get_all_data),
+    
     # Categories & Topics
     path('api/categories/', category_list),
     path('api/categories/create/', create_category),
